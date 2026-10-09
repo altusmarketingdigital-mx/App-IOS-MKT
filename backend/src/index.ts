@@ -43,7 +43,7 @@ app.use(async (req: Request, res: Response, next: NextFunction): Promise<any> =>
 
 app.use('/api', routes);
 
-if (process.env.NODE_ENV !== 'production') {
+if ((process.env as any).NODE_ENV !== 'production') {
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
     });
