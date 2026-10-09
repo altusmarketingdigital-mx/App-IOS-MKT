@@ -11,7 +11,7 @@ export class Expense {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column()
+    @Column({ type: 'varchar' })
     description: string;
 
     @Column('decimal', { precision: 12, scale: 2 })

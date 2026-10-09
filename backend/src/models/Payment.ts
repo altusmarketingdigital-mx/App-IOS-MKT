@@ -13,7 +13,7 @@ export class Payment {
     @Column('decimal', { precision: 12, scale: 2 })
     amount: number;
 
-    @Column()
+    @Column({ type: 'varchar' })
     payment_method: string;
 
     @CreateDateColumn()
