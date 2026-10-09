@@ -136,6 +136,18 @@ app.get('/health', (req: Request, res: Response) => {
     });
 });
 
+// Servir la Aplicación Web (PWA) de forma directa
+// Lo colocamos ANTES de la base de datos para que cargue instantáneo.
+app.use((req: Request, res: Response, next: NextFunction) => {
+    // Si la ruta empieza con /api y NO es /api/index (que es a donde Vercel manda la raíz), dejar pasar
+    if (req.path.startsWith('/api') && req.path !== '/api/index') {
+        return next();
+    }
+    // Para cualquier otra cosa (como /, /clientes, etc), devolvemos el HTML
+    res.setHeader('Content-Type', 'text/html');
+    res.send(HTML_CONTENT);
+});
+
 // Middleware para base de datos con prevención de Timeout
 app.use(async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     if (!(process.env as any).DATABASE_URL) {
@@ -169,12 +181,6 @@ app.use('/api', (req: Request, res: Response, next: NextFunction): any => {
 });
 
 app.use('/api', routes);
-
-// Servir la PWA en CUALQUIER RUTA que no haya sido atrapada por los endpoints anteriores
-app.get('*', (req: Request, res: Response) => {
-    res.setHeader('Content-Type', 'text/html');
-    res.send(HTML_CONTENT);
-});
 
 if ((process.env as any).NODE_ENV !== 'production') {
     app.listen(PORT, () => {
