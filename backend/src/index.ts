@@ -16,22 +16,32 @@ app.use(express.json());
 
 // Base Route
 app.get('/', (req: Request, res: Response) => {
-    res.json({ message: 'Altus MKT API Running successfully' });
+    res.json({ 
+        message: 'Altus MKT API Running successfully',
+        db_url_configured: !!(process.env as any).DATABASE_URL
+    });
+});
+
+// Lazy load Database connection for Vercel
+app.use(async (req, res, next) => {
+    try {
+        if (!AppDataSource.isInitialized) {
+            await AppDataSource.initialize();
+        }
+        next();
+    } catch (error: any) {
+        console.error('Error DB:', error);
+        res.status(500).json({ error: 'Database connection failed', details: error.message });
+    }
 });
 
 app.use('/api', routes);
 
-// Initialize Database & Server
-AppDataSource.initialize()
-    .then(() => {
-        console.log('✅ Conexión a Supabase (PostgreSQL) establecida exitosamente.');
-        if (process.env.NODE_ENV !== 'production') {
-            app.listen(PORT, () => {
-                console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-            });
-        }
-    })
-    .catch((error: any) => console.log('❌ Error al conectar a la base de datos:', error));
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
 
 module.exports = app;
 export default app;
