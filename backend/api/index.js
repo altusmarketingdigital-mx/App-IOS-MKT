@@ -1,15 +1,14 @@
-let appHandler: any;
-let fatalError: any = null;
+let appHandler;
+let fatalError = null;
 
 try {
-    // Importación dinámica para atrapar errores de raíz
-    const expressApp = require('../src/index');
+    const expressApp = require('../dist/index.js');
     appHandler = expressApp.default || expressApp;
-} catch (e: any) {
+} catch (e) {
     fatalError = e;
 }
 
-export default function (req: any, res: any) {
+module.exports = function (req, res) {
     if (fatalError) {
         return res.status(500).json({
             error: "FATAL_CRASH_ON_STARTUP",
@@ -18,4 +17,4 @@ export default function (req: any, res: any) {
         });
     }
     return appHandler(req, res);
-}
+};
