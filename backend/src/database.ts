@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
 import dotenv from 'dotenv';
+import 'pg'; // <--- EXPLICIT IMPORT FOR VERCEL ESBUILD
 import { Client } from './models/Client';
 import { Expense } from './models/Expense';
 import { Quote } from './models/Quote';
