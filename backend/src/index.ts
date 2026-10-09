@@ -33,4 +33,5 @@ AppDataSource.initialize()
     })
     .catch((error: any) => console.log('❌ Error al conectar a la base de datos:', error));
 
+module.exports = app;
 export default app;

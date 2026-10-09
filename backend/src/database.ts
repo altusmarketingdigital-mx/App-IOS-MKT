@@ -1,17 +1,24 @@
 import { DataSource } from 'typeorm';
 import dotenv from 'dotenv';
+import { Client } from './models/Client';
+import { Expense } from './models/Expense';
+import { Quote } from './models/Quote';
+import { OrderSale } from './models/OrderSale';
+import { Payment } from './models/Payment';
+import { Supplier } from './models/Supplier';
+import { SupplierPayment } from './models/SupplierPayment';
 
 dotenv.config();
 
 export const AppDataSource = new DataSource({
     type: 'postgres',
-    url: (process.env as any).DATABASE_URL, // String de conexión de Supabase
+    url: (process.env as any).DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // Requerido por Supabase
+        rejectUnauthorized: false
     },
-    synchronize: true, // True solo para desarrollo local, crea/actualiza tablas automáticamente
+    synchronize: true,
     logging: false,
-    entities: [__dirname + '/models/**/*{.ts,.js}'],
-    migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
+    entities: [Client, Expense, Quote, OrderSale, Payment, Supplier, SupplierPayment],
+    migrations: [],
     subscribers: [],
 });
