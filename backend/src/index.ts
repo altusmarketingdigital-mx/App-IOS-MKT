@@ -25,8 +25,12 @@ app.use('/api', routes);
 AppDataSource.initialize()
     .then(() => {
         console.log('✅ Conexión a Supabase (PostgreSQL) establecida exitosamente.');
-        app.listen(PORT, () => {
-            console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-        });
+        if (process.env.NODE_ENV !== 'production') {
+            app.listen(PORT, () => {
+                console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+            });
+        }
     })
     .catch((error: any) => console.log('❌ Error al conectar a la base de datos:', error));
+
+export default app;
