@@ -5,6 +5,7 @@ struct OrderSaleListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \OrderSale.createdAt, order: .reverse) private var sales: [OrderSale]
     @State private var showingAddPaymentFor: OrderSale?
+    @State private var pdfURLToShare: PDFShareItem?
 
     var body: some View {
         NavigationStack {
@@ -48,12 +49,23 @@ struct OrderSaleListView: View {
                             }
                             .tint(.blue)
                         }
+                        
+                        // Botón PDF Recibo (Fase 6)
+                        Button {
+                            shareSale(sale)
+                        } label: {
+                            Label("Recibo", systemImage: "square.and.arrow.up")
+                        }
+                        .tint(.green)
                     }
                 }
             }
             .navigationTitle("Ventas")
             .sheet(item: $showingAddPaymentFor) { sale in
                 AddPaymentView(orderSale: sale)
+            }
+            .sheet(item: $pdfURLToShare) { urlItem in
+                ActivityView(activityItems: [urlItem.url])
             }
             .overlay {
                 if sales.isEmpty {
@@ -69,6 +81,15 @@ struct OrderSaleListView: View {
         case "In Process": return .blue
         case "Cancelled": return .red
         default: return .orange
+        }
+    }
+    
+    // Generación de PDF (Fase 6)
+    @MainActor
+    private func shareSale(_ sale: OrderSale) {
+        let template = SalePDFTemplate(sale: sale)
+        if let pdfURL = PDFManager.shared.render(view: template, filename: "Recibo_AltusMKT_\(sale.id.uuidString.prefix(5))") {
+            pdfURLToShare = PDFShareItem(url: pdfURL)
         }
     }
 }

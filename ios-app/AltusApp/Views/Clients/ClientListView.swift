@@ -5,11 +5,20 @@ struct ClientListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Client.name) private var clients: [Client]
     @State private var showingAddClient = false
+    @State private var searchText = ""
+
+    var filteredClients: [Client] {
+        if searchText.isEmpty {
+            return clients
+        } else {
+            return clients.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        }
+    }
 
     var body: some View {
         NavigationStack {
             List {
-                ForEach(clients) { client in
+                ForEach(filteredClients) { client in
                     VStack(alignment: .leading) {
                         Text(client.name)
                             .font(.headline)
@@ -23,6 +32,7 @@ struct ClientListView: View {
                 .onDelete(perform: deleteClients)
             }
             .navigationTitle("Clientes")
+            .searchable(text: $searchText, prompt: "Buscar cliente...")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showingAddClient = true }) {
@@ -34,8 +44,8 @@ struct ClientListView: View {
                 AddClientView()
             }
             .overlay {
-                if clients.isEmpty {
-                    ContentUnavailableView("Sin Clientes", systemImage: "person.3", description: Text("Agrega tu primer cliente para comenzar."))
+                if filteredClients.isEmpty {
+                    ContentUnavailableView("Sin Resultados", systemImage: "magnifyingglass", description: Text("No se encontraron clientes."))
                 }
             }
         }
