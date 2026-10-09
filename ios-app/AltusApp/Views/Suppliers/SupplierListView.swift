@@ -6,11 +6,20 @@ struct SupplierListView: View {
     @Query(sort: \Supplier.name) private var suppliers: [Supplier]
     @State private var showingAddSupplier = false
     @State private var showingAddPaymentFor: Supplier?
+    @State private var searchText = ""
+
+    var filteredSuppliers: [Supplier] {
+        if searchText.isEmpty {
+            return suppliers
+        } else {
+            return suppliers.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        }
+    }
 
     var body: some View {
         NavigationStack {
             List {
-                ForEach(suppliers) { supplier in
+                ForEach(filteredSuppliers) { supplier in
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
                             Text(supplier.name)
@@ -45,6 +54,7 @@ struct SupplierListView: View {
                 .onDelete(perform: deleteSuppliers)
             }
             .navigationTitle("Proveedores")
+            .searchable(text: $searchText, prompt: "Buscar proveedor...")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showingAddSupplier = true }) {
@@ -59,8 +69,8 @@ struct SupplierListView: View {
                 AddSupplierPaymentView(supplier: supplier)
             }
             .overlay {
-                if suppliers.isEmpty {
-                    ContentUnavailableView("Sin Proveedores", systemImage: "shippingbox", description: Text("No tienes proveedores registrados."))
+                if filteredSuppliers.isEmpty {
+                    ContentUnavailableView("Sin Resultados", systemImage: "magnifyingglass", description: Text("No se encontraron proveedores."))
                 }
             }
         }

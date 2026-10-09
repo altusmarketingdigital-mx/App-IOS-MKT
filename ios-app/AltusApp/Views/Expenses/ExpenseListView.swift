@@ -5,11 +5,20 @@ struct ExpenseListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Expense.date, order: .reverse) private var expenses: [Expense]
     @State private var showingAddExpense = false
+    @State private var searchText = ""
+
+    var filteredExpenses: [Expense] {
+        if searchText.isEmpty {
+            return expenses
+        } else {
+            return expenses.filter { $0.desc.localizedCaseInsensitiveContains(searchText) }
+        }
+    }
 
     var body: some View {
         NavigationStack {
             List {
-                ForEach(expenses) { expense in
+                ForEach(filteredExpenses) { expense in
                     HStack {
                         VStack(alignment: .leading) {
                             Text(expense.desc).font(.headline)
@@ -28,6 +37,7 @@ struct ExpenseListView: View {
                 .onDelete(perform: deleteExpenses)
             }
             .navigationTitle("Gastos")
+            .searchable(text: $searchText, prompt: "Buscar gasto...")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showingAddExpense = true }) {
@@ -39,8 +49,8 @@ struct ExpenseListView: View {
                 AddExpenseView()
             }
             .overlay {
-                if expenses.isEmpty {
-                    ContentUnavailableView("Sin Gastos", systemImage: "creditcard", description: Text("No has registrado gastos aún."))
+                if filteredExpenses.isEmpty {
+                    ContentUnavailableView("Sin Resultados", systemImage: "magnifyingglass", description: Text("No se encontraron gastos."))
                 }
             }
         }

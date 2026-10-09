@@ -41,6 +41,18 @@ app.use(async (req: Request, res: Response, next: NextFunction): Promise<any> =>
     }
 });
 
+// Middleware de Seguridad (Fase 7)
+app.use('/api', (req: Request, res: Response, next: NextFunction): any => {
+    const apiKey = req.headers['x-api-key'];
+    // En Vercel configuraremos API_KEY="SECRET_TOKEN_ALTUS"
+    const validKey = (process.env as any).API_KEY || "SECRET_TOKEN_ALTUS";
+    
+    if (apiKey !== validKey) {
+        return res.status(401).json({ error: "Unauthorized", message: "Invalid API Key" });
+    }
+    next();
+});
+
 app.use('/api', routes);
 
 if ((process.env as any).NODE_ENV !== 'production') {

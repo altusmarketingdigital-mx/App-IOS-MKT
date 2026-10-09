@@ -10,7 +10,7 @@ class APIManager {
         guard let url = URL(string: "\(baseURL)/clients") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")`n        if let apiKey = UserDefaults.standard.string(forKey: "apiKey") { request.addValue(apiKey, forHTTPHeaderField: "x-api-key") }
         
         let body: [String: Any] = [
             "id": client.id.uuidString,
@@ -30,7 +30,7 @@ class APIManager {
         guard let url = URL(string: "\(baseURL)/expenses") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")`n        if let apiKey = UserDefaults.standard.string(forKey: "apiKey") { request.addValue(apiKey, forHTTPHeaderField: "x-api-key") }
         
         let formatter = ISO8601DateFormatter()
         let body: [String: Any] = [
