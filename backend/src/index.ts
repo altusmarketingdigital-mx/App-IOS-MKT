@@ -139,11 +139,11 @@ app.get('/health', (req: Request, res: Response) => {
 // Servir la Aplicación Web (PWA) de forma directa
 // Lo colocamos ANTES de la base de datos para que cargue instantáneo.
 app.use((req: Request, res: Response, next: NextFunction) => {
-    // Si la ruta empieza con /api y NO es /api/index (que es a donde Vercel manda la raíz), dejar pasar
-    if (req.path.startsWith('/api') && req.path !== '/api/index') {
+    // Si la URL original en el navegador pedía un endpoint de la API, dejamos pasar.
+    if (req.originalUrl.startsWith('/api')) {
         return next();
     }
-    // Para cualquier otra cosa (como /, /clientes, etc), devolvemos el HTML
+    // Si el usuario entra a la raíz "/", servimos la web estática.
     res.setHeader('Content-Type', 'text/html');
     res.send(HTML_CONTENT);
 });
@@ -169,18 +169,27 @@ app.use(async (req: Request, res: Response, next: NextFunction): Promise<any> =>
 });
 
 // Middleware de Seguridad (Fase 7)
-app.use('/api', (req: Request, res: Response, next: NextFunction): any => {
+const authMiddleware = (req: Request, res: Response, next: NextFunction): any => {
     const apiKey = req.headers['x-api-key'];
-    // En Vercel configuraremos API_KEY="SECRET_TOKEN_ALTUS"
     const validKey = (process.env as any).API_KEY || "SECRET_TOKEN_ALTUS";
-    
     if (apiKey !== validKey) {
         return res.status(401).json({ error: "Unauthorized", message: "Invalid API Key" });
     }
     next();
+};
+
+app.use('/api', authMiddleware);
+// En caso de que Vercel pase la ruta sin el prefijo /api
+app.use((req, res, next) => {
+    if (req.originalUrl.startsWith('/api')) {
+        return authMiddleware(req, res, next);
+    }
+    next();
 });
 
+// Para Vercel: hacer match de las rutas directamente y con /api
 app.use('/api', routes);
+app.use(routes);
 
 if ((process.env as any).NODE_ENV !== 'production') {
     app.listen(PORT, () => {
