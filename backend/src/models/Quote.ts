@@ -19,7 +19,7 @@ export class Quote {
     @Column('decimal', { precision: 12, scale: 2 })
     total: number;
 
-    @Column({ default: 'Pending' })
+    @Column({ type: 'varchar', default: 'Pending' })
     status: string; // Pending, Converted, Cancelled
 
     @CreateDateColumn()
