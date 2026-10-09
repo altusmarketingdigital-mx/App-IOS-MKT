@@ -126,13 +126,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
         }
     </script>
 </body>
-</html>\`;
-
-// Servir la Aplicación Web (PWA) de forma directa incrustada
-app.get('/', (req: Request, res: Response) => {
-    res.setHeader('Content-Type', 'text/html');
-    res.send(HTML_CONTENT);
-});
+</html>`;
 
 // Base Route (Healthcheck fallback)
 app.get('/health', (req: Request, res: Response) => {
@@ -175,6 +169,12 @@ app.use('/api', (req: Request, res: Response, next: NextFunction): any => {
 });
 
 app.use('/api', routes);
+
+// Servir la PWA en CUALQUIER RUTA que no haya sido atrapada por los endpoints anteriores
+app.get('*', (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'text/html');
+    res.send(HTML_CONTENT);
+});
 
 if ((process.env as any).NODE_ENV !== 'production') {
     app.listen(PORT, () => {
