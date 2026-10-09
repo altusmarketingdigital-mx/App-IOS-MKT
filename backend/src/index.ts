@@ -2,10 +2,17 @@ import 'reflect-metadata';
 import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import path from 'path';
 import { AppDataSource } from './database';
 import routes from './routes';
 import { HTML_CONTENT } from './html';
+
+dotenv.config();
+
+const app: Application = express();
+const PORT = (process.env as any).PORT || 3000;
+
+app.use(cors() as any);
+app.use(express.json());
 
 // Base Route (Healthcheck fallback)
 app.get('/health', (req: Request, res: Response) => {
@@ -16,13 +23,10 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // Servir la Aplicación Web (PWA) de forma directa
-// Lo colocamos ANTES de la base de datos para que cargue instantáneo.
 app.use((req: Request, res: Response, next: NextFunction) => {
-    // Si la URL original en el navegador pedía un endpoint de la API, dejamos pasar.
     if (req.originalUrl.startsWith('/api')) {
         return next();
     }
-    // Si el usuario entra a la raíz "/", servimos la web estática.
     res.setHeader('Content-Type', 'text/html');
     res.send(HTML_CONTENT);
 });
@@ -58,7 +62,6 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction): any =>
 };
 
 app.use('/api', authMiddleware);
-// En caso de que Vercel pase la ruta sin el prefijo /api
 app.use((req, res, next) => {
     if (req.originalUrl.startsWith('/api')) {
         return authMiddleware(req, res, next);
