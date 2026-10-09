@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import { AppDataSource } from './database';
 import routes from './routes';
 
@@ -13,8 +14,11 @@ const PORT = (process.env as any).PORT || 3000;
 app.use(cors() as any);
 app.use(express.json());
 
-// Base Route (Healthcheck)
-app.get('/', (req: Request, res: Response) => {
+// Servir la Aplicación Web (PWA)
+app.use(express.static(path.join(process.cwd(), 'public')));
+
+// Base Route (Healthcheck fallback por si falla el front)
+app.get('/health', (req: Request, res: Response) => {
     res.json({ 
         message: 'Altus MKT API Running successfully',
         db_url_configured: !!(process.env as any).DATABASE_URL

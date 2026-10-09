@@ -1,0 +1,17 @@
+{
+    "name": "Altus MKT",
+    "short_name": "AltusMKT",
+    "description": "Panel de Gestión para Altus MKT",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#2563eb",
+    "icons": [
+        {
+            "src": "https://cdn-icons-png.flaticon.com/512/2953/2953330.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
