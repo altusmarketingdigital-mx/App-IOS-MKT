@@ -1,10 +1,16 @@
 import SwiftUI
 import SwiftData
 
+struct PDFShareItem: Identifiable {
+    let id = UUID()
+    let url: URL
+}
+
 struct QuoteListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Quote.createdAt, order: .reverse) private var quotes: [Quote]
     @State private var showingAddQuote = false
+    @State private var pdfURLToShare: PDFShareItem?
 
     var body: some View {
         NavigationStack {
@@ -36,6 +42,14 @@ struct QuoteListView: View {
                             }
                             .tint(.green)
                         }
+                        
+                        // Botón de Compartir (Fase 6)
+                        Button {
+                            shareQuote(quote)
+                        } label: {
+                            Label("PDF", systemImage: "square.and.arrow.up")
+                        }
+                        .tint(.blue)
                     }
                 }
                 .onDelete(perform: deleteQuotes)
@@ -50,6 +64,9 @@ struct QuoteListView: View {
             }
             .sheet(isPresented: $showingAddQuote) {
                 AddQuoteView()
+            }
+            .sheet(item: $pdfURLToShare) { urlItem in
+                ActivityView(activityItems: [urlItem.url])
             }
             .overlay {
                 if quotes.isEmpty {
@@ -80,6 +97,15 @@ struct QuoteListView: View {
             for index in offsets {
                 modelContext.delete(quotes[index])
             }
+        }
+    }
+    
+    // Generación de PDF (Fase 6)
+    @MainActor
+    private func shareQuote(_ quote: Quote) {
+        let template = QuotePDFTemplate(quote: quote)
+        if let pdfURL = PDFManager.shared.render(view: template, filename: "Cotizacion_AltusMKT_\(quote.id.uuidString.prefix(5))") {
+            pdfURLToShare = PDFShareItem(url: pdfURL)
         }
     }
 }
