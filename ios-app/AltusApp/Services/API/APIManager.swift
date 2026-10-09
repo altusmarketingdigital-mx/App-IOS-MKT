@@ -4,7 +4,7 @@ class APIManager {
     static let shared = APIManager()
     
     // Cambia a la IP de tu Mac (ej. 192.168.1.XX) si pruebas en un dispositivo físico
-    private let baseURL = "http://localhost:3000/api"
+    private let baseURL = "https://app-ios-mkt.vercel.app/api"
     
     func postClient(_ client: Client) async throws {
         guard let url = URL(string: "\(baseURL)/clients") else { return }
