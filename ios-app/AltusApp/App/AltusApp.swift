@@ -9,7 +9,9 @@ struct AltusApp: App {
             Expense.self,
             Quote.self,
             OrderSale.self,
-            Payment.self
+            Payment.self,
+            Supplier.self,
+            SupplierPayment.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -42,6 +44,9 @@ struct ContentView: View {
             
             OrderSaleListView()
                 .tabItem { Label("Ventas", systemImage: "cart.fill") }
+            
+            SupplierListView()
+                .tabItem { Label("Proveedores", systemImage: "shippingbox") }
             
             ExpenseListView()
                 .tabItem { Label("Gastos", systemImage: "creditcard") }

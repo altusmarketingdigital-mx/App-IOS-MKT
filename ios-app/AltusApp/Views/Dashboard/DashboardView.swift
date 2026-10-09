@@ -6,6 +6,7 @@ struct DashboardView: View {
     @Query private var expenses: [Expense]
     @Query private var payments: [Payment]
     @Query private var sales: [OrderSale]
+    @Query private var suppliers: [Supplier]
     
     var totalIncome: Double {
         payments.reduce(0) { $0 + $1.amount }
@@ -18,6 +19,10 @@ struct DashboardView: View {
     var accountsReceivable: Double {
         let totalSales = sales.reduce(0) { $0 + $1.total }
         return totalSales - totalIncome
+    }
+    
+    var accountsPayable: Double {
+        suppliers.reduce(0) { $0 + $1.currentBalance }
     }
     
     var expensesByMethod: [(method: String, amount: Double)] {
@@ -48,8 +53,7 @@ struct DashboardView: View {
                     
                     HStack {
                         SummaryCard(title: "Por Cobrar", amount: accountsReceivable, color: .orange)
-                        // Cuentas por Pagar estará activo cuando se agregue el módulo de Proveedores
-                        SummaryCard(title: "Por Pagar (Próx.)", amount: 0.0, color: .gray)
+                        SummaryCard(title: "Por Pagar", amount: accountsPayable, color: .purple)
                     }
                     .padding(.horizontal)
                     

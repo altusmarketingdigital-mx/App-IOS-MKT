@@ -5,6 +5,7 @@ import { ExpenseController } from '../controllers/expense.controller';
 import { QuoteController } from '../controllers/quote.controller';
 import { OrderSaleController } from '../controllers/ordersale.controller';
 import { PaymentController } from '../controllers/payment.controller';
+import { SupplierController } from '../controllers/supplier.controller';
 
 const router = Router();
 
@@ -24,5 +25,10 @@ router.get('/quotes', QuoteController.getAll);
 router.post('/sales', OrderSaleController.create);
 router.get('/sales', OrderSaleController.getAll);
 router.post('/payments', PaymentController.create);
+
+// Rutas de Proveedores
+router.post('/suppliers', SupplierController.createSupplier);
+router.get('/suppliers', SupplierController.getAllSuppliers);
+router.post('/supplier-payments', SupplierController.createPayment);
 
 export default router;
