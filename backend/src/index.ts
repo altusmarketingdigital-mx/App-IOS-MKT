@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import express, { Application, Request, Response } from 'express';
+import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { AppDataSource } from './database';
@@ -10,11 +10,10 @@ dotenv.config();
 const app: Application = express();
 const PORT = (process.env as any).PORT || 3000;
 
-// Middlewares
 app.use(cors() as any);
 app.use(express.json());
 
-// Base Route
+// Base Route (Healthcheck)
 app.get('/', (req: Request, res: Response) => {
     res.json({ 
         message: 'Altus MKT API Running successfully',
@@ -22,8 +21,15 @@ app.get('/', (req: Request, res: Response) => {
     });
 });
 
-// Lazy load Database connection for Vercel
-app.use(async (req, res, next) => {
+// Middleware para base de datos con prevención de Timeout
+app.use(async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+    if (!(process.env as any).DATABASE_URL) {
+        return res.status(500).json({ 
+            error: "FALTA_VARIABLE_ENTORNO", 
+            message: "La variable DATABASE_URL no fue encontrada en Vercel." 
+        });
+    }
+
     try {
         if (!AppDataSource.isInitialized) {
             await AppDataSource.initialize();
@@ -31,7 +37,7 @@ app.use(async (req, res, next) => {
         next();
     } catch (error: any) {
         console.error('Error DB:', error);
-        res.status(500).json({ error: 'Database connection failed', details: error.message });
+        return res.status(500).json({ error: 'Database connection failed', details: error.message });
     }
 });
 
