@@ -17,6 +17,7 @@ router.put('/clients/:id', ClientController.update);
 router.delete('/clients/:id', ClientController.delete);
 
 // Rutas de Usuarios / Auth
+router.get('/setup-admin', UserController.setupAdmin);
 router.post('/users', UserController.create);
 router.get('/users', UserController.getAll);
 router.put('/users/:id', UserController.update);
