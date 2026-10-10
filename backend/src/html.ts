@@ -349,20 +349,41 @@ export const HTML_CONTENT = `<!DOCTYPE html>
         </div>
 
         <!-- Modal Inventario -->
-        <div id="addProductModal" class="hidden fixed inset-0 bg-white z-50">
-            <div class="p-8 h-full flex flex-col">
-                <div class="flex justify-between items-center mb-10">
-                    <h3 class="text-2xl font-light tracking-tight">Registro de Producto</h3>
+        <div id="addProductModal" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
+            <div class="p-8 min-h-screen flex flex-col">
+                <div class="flex justify-between items-center mb-8">
+                    <h3 class="text-2xl font-light tracking-tight">Ficha de Producto</h3>
                     <button onclick="hideModal('addProductModal')" class="text-neutral-400">Cancelar</button>
                 </div>
                 <div class="flex-1 space-y-4">
-                    <input type="text" id="pName" placeholder="Nombre de Producto o Servicio" class="input-clean !mb-0">
                     <div class="grid grid-cols-2 gap-4">
-                        <input type="number" id="pPrice" placeholder="Precio Venta (MXN)" class="input-clean !mb-0">
-                        <input type="number" id="pStock" placeholder="Stock / Inventario" class="input-clean !mb-0">
+                        <input type="text" id="pSKU" placeholder="SKU / Código" class="input-clean !mb-0 font-mono text-sm">
+                        <select id="pCategory" class="input-clean !mb-0 bg-transparent text-neutral-500">
+                            <option value="Servicio Digital">Servicio Digital</option>
+                            <option value="Producto Físico">Producto Físico</option>
+                            <option value="Suscripción">Suscripción</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    <input type="text" id="pName" placeholder="Nombre de Producto o Servicio" class="input-clean !mb-0">
+                    <input type="text" id="pDesc" placeholder="Descripción breve" class="input-clean !mb-0 text-sm">
+                    
+                    <div class="grid grid-cols-3 gap-3 pt-4 border-t border-neutral-100">
+                        <div>
+                            <label class="text-[0.6rem] uppercase tracking-widest text-neutral-400 mb-1 block">Costo Interno</label>
+                            <input type="number" id="pCost" placeholder="$0.00" class="input-clean !mb-0">
+                        </div>
+                        <div>
+                            <label class="text-[0.6rem] uppercase tracking-widest text-neutral-400 mb-1 block">Precio Venta</label>
+                            <input type="number" id="pPrice" placeholder="$0.00" class="input-clean !mb-0">
+                        </div>
+                        <div>
+                            <label class="text-[0.6rem] uppercase tracking-widest text-neutral-400 mb-1 block">Existencias</label>
+                            <input type="number" id="pStock" placeholder="0" class="input-clean !mb-0">
+                        </div>
                     </div>
                 </div>
-                <button onclick="saveProduct()" class="btn-dark mb-8">Guardar en Catálogo</button>
+                <button onclick="saveProduct()" class="btn-dark mt-8 mb-8">Guardar en Catálogo</button>
             </div>
         </div>
 
@@ -624,28 +645,55 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                 container.innerHTML = emptyState('Catálogo vacío', 'Registra productos o servicios para control.');
                 return;
             }
-            container.innerHTML = products.map(p => \`
-            <div class="card flex justify-between items-center relative">
-                \${p.stock !== undefined && p.stock !== '' ? \`<span class="absolute top-4 right-4 text-[0.6rem] uppercase tracking-widest font-bold px-2 py-1 rounded \${p.stock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">Stock: \${p.stock}</span>\` : ''}
-                <div>
-                    <h3 class="font-medium text-neutral-900">\${p.name}</h3>
-                    <p class="text-xs text-neutral-400 mt-1">Categoría General</p>
-                </div>
-                <div class="text-neutral-900 font-light text-lg">
-                    $\${parseFloat(p.price).toLocaleString('es-MX', {minimumFractionDigits: 2})}
-                </div>
-            </div>\`).join('');
+            container.innerHTML = products.map(p => {
+                const profit = p.price && p.cost ? p.price - p.cost : null;
+                const margin = profit && p.price ? ((profit / p.price) * 100).toFixed(0) : null;
+                
+                return \`
+                <div class="card flex flex-col gap-2 relative">
+                    \${p.stock !== undefined && p.stock !== '' ? \`<span class="absolute top-4 right-4 text-[0.6rem] uppercase tracking-widest font-bold px-2 py-1 rounded \${p.stock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">Stock: \${p.stock}</span>\` : ''}
+                    
+                    <div class="flex items-center gap-2">
+                        \${p.sku ? \`<span class="text-[0.65rem] font-mono bg-neutral-100 text-neutral-500 px-1.5 py-0.5 rounded">\${p.sku}</span>\` : ''}
+                        <span class="text-[0.65rem] uppercase tracking-widest text-brand-accent">\${p.category || 'General'}</span>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-medium text-lg text-neutral-900">\${p.name}</h3>
+                        \${p.desc ? \`<p class="text-xs text-neutral-500 mt-1">\${p.desc}</p>\` : ''}
+                    </div>
+                    
+                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-neutral-50">
+                        <div>
+                            \${profit !== null ? \`<p class="text-[0.6rem] uppercase tracking-widest text-neutral-400">Margen: <span class="text-green-600 font-bold">\${margin}%</span></p>\` : ''}
+                        </div>
+                        <div class="text-neutral-900 font-light text-xl">
+                            $\${parseFloat(p.price).toLocaleString('es-MX', {minimumFractionDigits: 2})}
+                        </div>
+                    </div>
+                </div>\`;
+            }).join('');
         }
 
         function saveProduct() {
             const name = document.getElementById('pName').value;
             const price = document.getElementById('pPrice').value;
-            const stock = document.getElementById('pStock').value;
             
             if (!name || !price) return alert("Revisa el nombre y precio del producto");
             
+            const newProduct = { 
+                id: crypto.randomUUID(), 
+                sku: document.getElementById('pSKU').value,
+                category: document.getElementById('pCategory').value,
+                name: document.getElementById('pName').value, 
+                desc: document.getElementById('pDesc').value,
+                cost: parseFloat(document.getElementById('pCost').value) || 0,
+                price: parseFloat(document.getElementById('pPrice').value) || 0,
+                stock: document.getElementById('pStock').value 
+            };
+            
             const inventory = JSON.parse(localStorage.getItem('altus_inventory') || '[]');
-            inventory.push({ id: crypto.randomUUID(), name, price, stock });
+            inventory.push(newProduct);
             localStorage.setItem('altus_inventory', JSON.stringify(inventory));
             
             hideModal('addProductModal');
