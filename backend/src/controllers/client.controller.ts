@@ -40,7 +40,7 @@ export class ClientController {
 
     static async update(req: Request, res: Response) {
         try {
-            const { id } = req.params;
+            const id = req.params.id as string;
             const clientRepository = AppDataSource.getRepository(Client);
             const client = await clientRepository.findOneBy({ id });
             if (!client) return res.status(404).json({ error: 'Cliente no encontrado' });
@@ -55,7 +55,7 @@ export class ClientController {
 
     static async delete(req: Request, res: Response) {
         try {
-            const { id } = req.params;
+            const id = req.params.id as string;
             const clientRepository = AppDataSource.getRepository(Client);
             const client = await clientRepository.findOneBy({ id });
             if (!client) return res.status(404).json({ error: 'Cliente no encontrado' });
