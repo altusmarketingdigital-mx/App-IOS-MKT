@@ -28,19 +28,21 @@ export const HTML_CONTENT = `<!DOCTYPE html>
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         .card { 
-            background: #ffffff; 
-            border-radius: 12px; 
+            background: rgba(255, 255, 255, 0.8); 
+            backdrop-filter: blur(8px);
+            border-radius: 16px; 
             padding: 24px; 
-            border: 1px solid #eaeaea; 
+            border: 1px solid rgba(255,255,255,0.4); 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
             margin-bottom: 16px; 
         }
         
         /* Botones */
         .btn-brand { 
-            background-color: var(--brand-accent); 
+            background: linear-gradient(135deg, var(--brand-accent), #c25a43);
             color: #ffffff; 
             padding: 14px 24px; 
-            border-radius: 8px; 
+            border-radius: 12px; 
             font-weight: 600; 
             width: 100%; 
             text-align: center; 
@@ -48,15 +50,16 @@ export const HTML_CONTENT = `<!DOCTYPE html>
             align-items: center; 
             justify-content: center; 
             gap: 8px; 
-            transition: opacity 0.2s ease; 
+            box-shadow: 0 4px 12px rgba(217, 102, 76, 0.3);
+            transition: all 0.2s ease; 
         }
-        .btn-brand:active { opacity: 0.8; }
+        .btn-brand:active { transform: scale(0.98); box-shadow: 0 2px 6px rgba(217, 102, 76, 0.2); }
         
         .btn-dark { 
-            background-color: var(--brand-navy); 
+            background: linear-gradient(135deg, var(--brand-navy), #0f1926);
             color: #ffffff; 
             padding: 14px 24px; 
-            border-radius: 8px; 
+            border-radius: 12px; 
             font-weight: 600; 
             width: 100%; 
             text-align: center; 
@@ -64,16 +67,23 @@ export const HTML_CONTENT = `<!DOCTYPE html>
             align-items: center; 
             justify-content: center; 
             gap: 8px; 
+            box-shadow: 0 4px 12px rgba(21, 35, 54, 0.3);
+            transition: all 0.2s ease;
         }
+        .btn-dark:active { transform: scale(0.98); }
+        
         .btn-outline {
-            background-color: transparent;
+            background-color: #ffffff;
             border: 1px solid #e5e5e5;
             color: var(--brand-navy);
             padding: 14px 24px;
-            border-radius: 8px;
+            border-radius: 12px;
             font-weight: 500;
             text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: all 0.2s ease;
         }
+        .btn-outline:active { background-color: #fafafa; }
 
         /* Inputs */
         .input-clean { 
@@ -195,19 +205,34 @@ export const HTML_CONTENT = `<!DOCTYPE html>
             
             <!-- Dashboard -->
             <div id="view-dashboard" class="view-section fade-in">
-                <div class="mb-10">
-                    <p class="text-xs text-neutral-400 uppercase tracking-widest mb-2">Balance Neto</p>
-                    <h3 class="text-5xl font-light text-neutral-900 tracking-tight" id="dashBalance">$0.00</h3>
+                <div class="mb-10 bg-gradient-to-br from-brand-navy to-slate-800 p-6 rounded-2xl shadow-lg text-white">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-4 h-4 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p class="text-xs text-white/70 uppercase tracking-widest">Balance Neto</p>
+                    </div>
+                    <h3 class="text-5xl font-light tracking-tight" id="dashBalance">$0.00</h3>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-10">
-                    <div class="card !mb-0 !p-5 bg-neutral-50 border-none">
-                        <p class="text-neutral-500 text-xs uppercase tracking-widest mb-2">Ingresos</p>
-                        <h3 class="text-2xl font-light text-neutral-900" id="dashSales">$0.00</h3>
+                    <div class="card !mb-0 !p-5 border border-green-100 bg-green-50/50 shadow-sm relative overflow-hidden">
+                        <div class="absolute -right-4 -bottom-4 text-green-100 opacity-50">
+                            <svg class="w-20 h-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        </div>
+                        <div class="flex items-center gap-2 mb-2 relative z-10">
+                            <svg class="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                            <p class="text-green-800/70 text-xs uppercase tracking-widest font-semibold">Ingresos</p>
+                        </div>
+                        <h3 class="text-2xl font-light text-green-900 relative z-10" id="dashSales">$0.00</h3>
                     </div>
-                    <div class="card !mb-0 !p-5 bg-neutral-50 border-none">
-                        <p class="text-neutral-500 text-xs uppercase tracking-widest mb-2">Egresos</p>
-                        <h3 class="text-2xl font-light text-neutral-900" id="dashExpenses">$0.00</h3>
+                    <div class="card !mb-0 !p-5 border border-red-100 bg-red-50/50 shadow-sm relative overflow-hidden">
+                        <div class="absolute -right-4 -bottom-4 text-red-100 opacity-50">
+                            <svg class="w-20 h-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path></svg>
+                        </div>
+                        <div class="flex items-center gap-2 mb-2 relative z-10">
+                            <svg class="w-3.5 h-3.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                            <p class="text-red-800/70 text-xs uppercase tracking-widest font-semibold">Egresos</p>
+                        </div>
+                        <h3 class="text-2xl font-light text-red-900 relative z-10" id="dashExpenses">$0.00</h3>
                     </div>
                 </div>
 
@@ -628,9 +653,12 @@ export const HTML_CONTENT = `<!DOCTYPE html>
         }
 
         const emptyState = (title, subtitle) => \`
-            <div class="py-16 text-center border border-dashed border-neutral-200 rounded-xl mt-4">
-                <h3 class="text-sm font-medium text-neutral-900 mb-1">\${title}</h3>
-                <p class="text-neutral-400 text-xs">\${subtitle}</p>
+            <div class="py-16 flex flex-col items-center justify-center text-center border border-dashed border-neutral-200 bg-white/50 rounded-2xl mt-4 shadow-sm">
+                <div class="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                </div>
+                <h3 class="text-base font-medium text-neutral-800 mb-1">\${title}</h3>
+                <p class="text-neutral-400 text-xs max-w-[200px] leading-relaxed">\${subtitle}</p>
             </div>
         \`;
 
@@ -733,23 +761,33 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                 container.innerHTML = emptyState('Sin clientes', 'Tu directorio está vacío.');
                 return;
             }
-            container.innerHTML = clients.map(c => \`
-            <div class="card flex flex-col gap-2 relative">
-                \${c.client_type ? \`<span class="absolute top-4 right-4 text-[0.6rem] uppercase tracking-widest font-bold px-2 py-1 rounded bg-neutral-100 \${c.client_type === 'Activo' ? 'text-green-600' : 'text-neutral-500'}">\${c.client_type}</span>\` : ''}
-                <div>
-                    <h3 class="font-medium text-lg text-neutral-900">\${c.name}</h3>
-                    \${c.contact_name ? \`<p class="text-sm text-neutral-600 mt-1">Representante: \${c.contact_name}</p>\` : ''}
-                </div>
-                <div class="flex items-center gap-4 mt-2">
-                    \${c.phone ? \`<p class="text-xs text-neutral-400 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>\${c.phone}</p>\` : ''}
-                    \${c.email ? \`<p class="text-xs text-neutral-400 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>\${c.email}</p>\` : ''}
-                </div>
-                \${c.rfc || c.website ? \`
-                <div class="flex items-center gap-4 mt-1 border-t border-neutral-50 pt-2">
-                    \${c.rfc ? \`<p class="text-[0.65rem] text-neutral-400 uppercase tracking-wider">RFC: \${c.rfc}</p>\` : ''}
-                    \${c.website ? \`<a href="\${c.website}" target="_blank" class="text-[0.65rem] text-brand-accent uppercase tracking-wider hover:underline">Sitio Web</a>\` : ''}
-                </div>\` : ''}
-            </div>\`).join('');
+            container.innerHTML = clients.map(c => {
+                const initial = c.name ? c.name.charAt(0).toUpperCase() : 'C';
+                return \`
+                <div class="card flex gap-4 relative items-start">
+                    \${c.client_type ? \`<span class="absolute top-4 right-4 text-[0.6rem] uppercase tracking-widest font-bold px-2 py-1 rounded \${c.client_type === 'Activo' ? 'bg-green-100/50 text-green-700' : 'bg-neutral-100 text-neutral-500'}">\${c.client_type}</span>\` : ''}
+                    
+                    <div class="w-12 h-12 shrink-0 bg-gradient-to-br from-brand-navy to-slate-700 rounded-full flex items-center justify-center text-white font-light text-lg shadow-inner">
+                        \${initial}
+                    </div>
+
+                    <div class="flex-1">
+                        <h3 class="font-medium text-lg text-neutral-900">\${c.name}</h3>
+                        \${c.contact_name ? \`<p class="text-sm text-neutral-500 mt-0.5 flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>\${c.contact_name}</p>\` : ''}
+                        
+                        <div class="flex items-center gap-4 mt-3">
+                            \${c.phone ? \`<p class="text-xs text-neutral-400 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>\${c.phone}</p>\` : ''}
+                            \${c.email ? \`<p class="text-xs text-neutral-400 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>\${c.email}</p>\` : ''}
+                        </div>
+                        
+                        \${c.rfc || c.website ? \`
+                        <div class="flex items-center gap-4 mt-3 border-t border-neutral-100 pt-3">
+                            \${c.rfc ? \`<p class="text-[0.65rem] text-neutral-400 uppercase tracking-wider flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>RFC: \${c.rfc}</p>\` : ''}
+                            \${c.website ? \`<a href="\${c.website}" target="_blank" class="text-[0.65rem] text-brand-accent uppercase tracking-wider flex items-center gap-1 hover:underline"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>Sitio Web</a>\` : ''}
+                        </div>\` : ''}
+                    </div>
+                </div>\`;
+            }).join('');
         }
 
         async function saveClient() {
@@ -788,23 +826,26 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                 
                 return \`
                 <div class="card flex flex-col gap-2 relative">
-                    \${p.stock !== undefined && p.stock !== '' ? \`<span class="absolute top-4 right-4 text-[0.6rem] uppercase tracking-widest font-bold px-2 py-1 rounded \${p.stock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">Stock: \${p.stock}</span>\` : ''}
+                    \${p.stock !== undefined && p.stock !== '' ? \`<span class="absolute top-4 right-4 text-[0.6rem] uppercase tracking-widest font-bold px-2 py-1 rounded shadow-sm \${p.stock > 0 ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}">\${p.stock > 0 ? 'En Stock: ' : 'Agotado: '}\${p.stock}</span>\` : ''}
                     
                     <div class="flex items-center gap-2">
-                        \${p.sku ? \`<span class="text-[0.65rem] font-mono bg-neutral-100 text-neutral-500 px-1.5 py-0.5 rounded">\${p.sku}</span>\` : ''}
-                        <span class="text-[0.65rem] uppercase tracking-widest text-brand-accent">\${p.category || 'General'}</span>
+                        \${p.sku ? \`<span class="text-[0.65rem] font-mono bg-neutral-100 text-neutral-500 px-1.5 py-0.5 rounded border border-neutral-200">\${p.sku}</span>\` : ''}
+                        <span class="text-[0.65rem] uppercase tracking-widest text-brand-accent flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                            \${p.category || 'General'}
+                        </span>
                     </div>
                     
                     <div>
                         <h3 class="font-medium text-lg text-neutral-900">\${p.name}</h3>
-                        \${p.desc ? \`<p class="text-xs text-neutral-500 mt-1">\${p.desc}</p>\` : ''}
+                        \${p.desc ? \`<p class="text-sm text-neutral-500 mt-1 leading-relaxed">\${p.desc}</p>\` : ''}
                     </div>
                     
-                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-neutral-50">
+                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-neutral-100">
                         <div>
                             \${profit !== null ? \`<p class="text-[0.6rem] uppercase tracking-widest text-neutral-400">Margen: <span class="text-green-600 font-bold">\${margin}%</span></p>\` : ''}
                         </div>
-                        <div class="text-neutral-900 font-light text-xl">
+                        <div class="text-brand-navy font-medium text-xl">
                             $\${parseFloat(p.price).toLocaleString('es-MX', {minimumFractionDigits: 2})}
                         </div>
                     </div>
