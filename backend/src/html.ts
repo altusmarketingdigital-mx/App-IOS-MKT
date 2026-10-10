@@ -457,7 +457,39 @@ export const HTML_CONTENT = `<!DOCTYPE html>
             document.getElementById('appScreen').classList.add('hidden');
             document.getElementById('loginScreen').classList.remove('hidden');
             hideModal('settingsModal');
+            clearTimeout(inactivityTimer);
         }
+
+        // --- AUTO LOGOUT POR INACTIVIDAD ---
+        let inactivityTimer;
+        const INACTIVITY_LIMIT = 60000; // 1 minuto en milisegundos
+
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            if (apiKey) {
+                inactivityTimer = setTimeout(() => {
+                    alert("Tu sesión ha sido cerrada por seguridad (1 minuto de inactividad).");
+                    logout();
+                }, INACTIVITY_LIMIT);
+            }
+        }
+
+        ['mousemove', 'keydown', 'touchstart', 'click', 'scroll'].forEach(evt => 
+            document.addEventListener(evt, resetInactivityTimer, { passive: true })
+        );
+
+        // Modificamos login original para que inicie el timer
+        const originalLogin = login;
+        login = function() {
+            originalLogin();
+            if(apiKey) resetInactivityTimer();
+        };
+
+        const originalFaceID = loginWithFaceID;
+        loginWithFaceID = async function() {
+            await originalFaceID();
+            if(apiKey) resetInactivityTimer();
+        };
 
         async function apiRequest(endpoint, method = 'GET', body = null) {
             const headers = { 'x-api-key': apiKey, 'Content-Type': 'application/json' };
