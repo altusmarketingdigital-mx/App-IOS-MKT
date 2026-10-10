@@ -8,6 +8,7 @@ import { OrderSale } from './models/OrderSale';
 import { Payment } from './models/Payment';
 import { Supplier } from './models/Supplier';
 import { SupplierPayment } from './models/SupplierPayment';
+import { User } from './models/User';
 
 dotenv.config();
 
@@ -19,7 +20,7 @@ export const AppDataSource = new DataSource({
     },
     synchronize: true,
     logging: false,
-    entities: [Client, Expense, Quote, OrderSale, Payment, Supplier, SupplierPayment],
+    entities: [Client, Expense, Quote, OrderSale, Payment, Supplier, SupplierPayment, User],
     migrations: [],
     subscribers: [],
 });

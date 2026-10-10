@@ -53,6 +53,11 @@ app.use(async (req: Request, res: Response, next: NextFunction): Promise<any> =>
 
 // Middleware de Seguridad (Fase 7)
 const authMiddleware = (req: Request, res: Response, next: NextFunction): any => {
+    // Excluir ruta de login
+    if (req.originalUrl.includes('/auth/login')) {
+        return next();
+    }
+    
     const apiKey = req.headers['x-api-key'];
     const validKey = (process.env as any).API_KEY || "SECRET_TOKEN_ALTUS";
     if (apiKey !== validKey) {

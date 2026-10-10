@@ -6,12 +6,18 @@ import { QuoteController } from '../controllers/quote.controller';
 import { OrderSaleController } from '../controllers/ordersale.controller';
 import { PaymentController } from '../controllers/payment.controller';
 import { SupplierController } from '../controllers/supplier.controller';
+import { UserController } from '../controllers/user.controller';
 
 const router = Router();
 
 // Rutas de Clientes
 router.post('/clients', ClientController.create);
 router.get('/clients', ClientController.getAll);
+
+// Rutas de Usuarios / Auth
+router.post('/users', UserController.create);
+router.get('/users', UserController.getAll);
+router.post('/auth/login', UserController.login);
 
 // Rutas de Gastos
 router.post('/expenses', ExpenseController.create);

@@ -312,7 +312,11 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                 </div>
 
                 <div class="space-y-4 pt-8 border-t border-neutral-100">
-                    <button onclick="logout()" class="text-brand-accent font-medium hover:opacity-70 transition text-left">
+                    <button onclick="hideModal('settingsModal'); showModal('usersModal'); loadUsers();" class="w-full text-brand-navy font-medium hover:opacity-70 transition text-left flex justify-between items-center">
+                        <span>Gestión de Usuarios y Accesos</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                    <button onclick="logout()" class="w-full text-brand-accent font-medium hover:opacity-70 transition text-left pt-4 mt-4 border-t border-neutral-100">
                         Cerrar Sesión
                     </button>
                     <p class="text-neutral-300 text-xs pt-10">Altus MKT System v3.0 - Web Build</p>
@@ -320,7 +324,54 @@ export const HTML_CONTENT = `<!DOCTYPE html>
             </div>
         </div>
 
-        <div id="addClientModal" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
+        <!-- MODAL USUARIOS -->
+        <div id="usersModal" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
+            <div class="p-8 min-h-screen flex flex-col">
+                <div class="flex justify-between items-center mb-8">
+                    <h3 class="text-2xl font-light tracking-tight">Usuarios</h3>
+                    <button onclick="hideModal('usersModal')" class="text-neutral-400">Volver</button>
+                </div>
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-xs text-neutral-400 uppercase tracking-widest">Equipo Registrado</p>
+                    <button onclick="showModal('addUserModal')" class="text-brand-navy text-sm font-medium hover:underline">+ Nuevo Usuario</button>
+                </div>
+                <div id="usersList" class="flex-1 space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- MODAL CREAR USUARIO Y REGISTRAR HUELLA -->
+        <div id="addUserModal" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
+            <div class="p-8 min-h-screen flex flex-col">
+                <div class="flex justify-between items-center mb-8">
+                    <h3 class="text-2xl font-light tracking-tight">Nuevo Usuario</h3>
+                    <button onclick="hideModal('addUserModal')" class="text-neutral-400">Cancelar</button>
+                </div>
+                <div class="flex-1 space-y-4">
+                    <input type="text" id="uName" placeholder="Nombre Completo" class="input-clean !mb-0">
+                    <input type="email" id="uEmail" placeholder="Correo Electrónico" class="input-clean !mb-0">
+                    <input type="tel" id="uPhone" placeholder="Teléfono" class="input-clean !mb-0">
+                    
+                    <label class="text-[0.6rem] uppercase tracking-widest text-neutral-400 mb-1 block mt-4">Rol del Sistema</label>
+                    <select id="uRole" class="input-clean !mb-0 bg-transparent text-neutral-900">
+                        <option value="Administrador">Administrador</option>
+                        <option value="Ventas">Ventas</option>
+                        <option value="Soporte">Soporte</option>
+                    </select>
+
+                    <!-- WebAuthn Biometría -->
+                    <div class="mt-8 p-4 border border-dashed border-neutral-300 rounded-lg text-center">
+                        <h4 class="font-medium text-brand-navy mb-2">Vincular Dispositivo</h4>
+                        <p class="text-xs text-neutral-500 mb-4">Registra la huella o Face ID del usuario para acceso rápido (FIDO2).</p>
+                        <button onclick="registerFaceID()" class="btn-outline text-sm py-2 mx-auto" id="btnRegisterBiometrics">
+                            Registrar Huella / Face ID
+                        </button>
+                        <input type="hidden" id="uCredentialId">
+                        <p id="bioSuccess" class="text-green-600 text-xs font-bold mt-3 hidden">¡Huella vinculada exitosamente!</p>
+                    </div>
+                </div>
+                <button onclick="saveUser()" class="btn-dark mt-8 mb-8">Guardar Usuario</button>
+            </div>
+        </div>
             <div class="p-8 min-h-screen flex flex-col">
                 <div class="flex justify-between items-center mb-8">
                     <h3 class="text-2xl font-light tracking-tight">Nuevo Cliente</h3>
@@ -457,20 +508,28 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                 // Intentamos invocar la API nativa de biometría del iPad
                 const credential = await navigator.credentials.get({ publicKey: options });
                 
-                // Si el usuario pone su cara/huella con éxito, lo dejamos pasar
                 if (credential) {
-                    document.getElementById('pinInput').value = 'ALTUS2026';
-                    login();
+                    const rawId = btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId)));
+                    
+                    // Verificamos en el backend si esta huella pertenece a alguien
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ credential_id: rawId })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if(response.ok && data.token) {
+                        document.getElementById('pinInput').value = data.token;
+                        login(); // Esto los deja pasar si el token empata con el maestro
+                    } else {
+                        alert(data.error || "Huella no reconocida en el sistema.");
+                    }
                 }
             } catch (err) {
                 console.log(err);
-                // Usualmente falla la primera vez si no hay Passkeys registrados, 
-                // así que por experiencia de usuario le permitimos pasar simulando el éxito (Solo en entorno controlado)
-                const confirmBiometric = confirm('No se detectó un registro de FaceID. ¿Deseas configurarlo ahora vinculando este dispositivo?');
-                if(confirmBiometric) {
-                    document.getElementById('pinInput').value = 'ALTUS2026';
-                    login();
-                }
+                alert("Proceso biométrico cancelado o no soportado.");
             }
         }
         
@@ -572,6 +631,82 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                 <p class="text-neutral-400 text-xs">\${subtitle}</p>
             </div>
         \`;
+
+        // --- USUARIOS Y WEBAUTHN ---
+        async function loadUsers() {
+            const container = document.getElementById('usersList');
+            const users = await apiRequest('/users');
+            if (!users || users.length === 0) {
+                container.innerHTML = emptyState('Sin usuarios', 'Registra al primer miembro del equipo.');
+                return;
+            }
+            container.innerHTML = users.map(u => \`
+            <div class="card !p-4 flex items-center justify-between">
+                <div>
+                    <h3 class="font-medium text-neutral-900">\${u.name}</h3>
+                    <p class="text-xs text-neutral-400">\${u.email} • \${u.role}</p>
+                </div>
+                \${u.credential_id ? '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>' : ''}
+            </div>\`).join('');
+        }
+
+        async function registerFaceID() {
+            try {
+                if (!window.PublicKeyCredential) return alert("Dispositivo no compatible.");
+                const options = {
+                    challenge: new Uint8Array(32),
+                    rp: { name: "Altus MKT", id: window.location.hostname },
+                    user: {
+                        id: new Uint8Array(16), // ID genérico para simplificar
+                        name: document.getElementById('uEmail').value || "user@altus.mx",
+                        displayName: document.getElementById('uName').value || "Usuario Altus"
+                    },
+                    pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+                    authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+                    timeout: 60000
+                };
+                
+                const credential = await navigator.credentials.create({ publicKey: options });
+                if (credential) {
+                    // Guardamos el ID crudo en Base64 para guardarlo en la BD
+                    const rawId = btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId)));
+                    document.getElementById('uCredentialId').value = rawId;
+                    document.getElementById('btnRegisterBiometrics').classList.add('hidden');
+                    document.getElementById('bioSuccess').classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error o cancelación al registrar biométrico.");
+            }
+        }
+
+        async function saveUser() {
+            const name = document.getElementById('uName').value;
+            const email = document.getElementById('uEmail').value;
+            if (!name || !email) return alert("Nombre y correo requeridos");
+            
+            const newUser = {
+                name, email,
+                phone: document.getElementById('uPhone').value,
+                role: document.getElementById('uRole').value,
+                credential_id: document.getElementById('uCredentialId').value
+            };
+            
+            const res = await apiRequest('/users', 'POST', newUser);
+            if(res && res.error) {
+                return alert(res.error);
+            }
+            hideModal('addUserModal');
+            loadUsers();
+            
+            // Limpiar form
+            document.getElementById('uName').value = '';
+            document.getElementById('uEmail').value = '';
+            document.getElementById('uPhone').value = '';
+            document.getElementById('uCredentialId').value = '';
+            document.getElementById('btnRegisterBiometrics').classList.remove('hidden');
+            document.getElementById('bioSuccess').classList.add('hidden');
+        }
 
         // --- DASHBOARD ---
         async function updateDashboard() {
