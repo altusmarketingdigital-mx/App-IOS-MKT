@@ -7,6 +7,20 @@ export const HTML_CONTENT = `<!DOCTYPE html>
     <meta name="theme-color" content="#152336">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2953/2953330.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            navy: '#152336',
+                            accent: '#d9664c'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
