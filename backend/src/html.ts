@@ -452,7 +452,11 @@ export const HTML_CONTENT = `<!DOCTYPE html>
         
         function logout() {
             localStorage.removeItem('altus_api_key');
-            location.reload();
+            apiKey = null;
+            document.getElementById('pinInput').value = '';
+            document.getElementById('appScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            hideModal('settingsModal');
         }
 
         async function apiRequest(endpoint, method = 'GET', body = null) {
