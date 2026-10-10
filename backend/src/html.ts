@@ -217,9 +217,9 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"></path></svg>
                         Nueva Cotización
                     </button>
-                    <button onclick="switchTab('services', 'Servicios'); showModal('addServiceModal')" class="btn-outline flex items-center justify-center gap-2">
+                    <button onclick="switchTab('inventory', 'Inventario'); showModal('addProductModal')" class="btn-outline flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 12H4"></path></svg>
-                        Crear Servicio
+                        Nuevo Producto
                     </button>
                 </div>
             </div>
@@ -233,13 +233,13 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                 <div id="clientsList"></div>
             </div>
 
-            <!-- Servicios (NUEVO MÓDULO) -->
-            <div id="view-services" class="view-section hidden fade-in">
+            <!-- Inventario (NUEVO MÓDULO) -->
+            <div id="view-inventory" class="view-section hidden fade-in">
                 <div class="flex justify-between items-center mb-6">
                     <p class="text-xs text-neutral-400 uppercase tracking-widest">Catálogo</p>
-                    <button onclick="showModal('addServiceModal')" class="text-brand-navy text-sm font-medium hover:underline">+ Nuevo</button>
+                    <button onclick="showModal('addProductModal')" class="text-brand-navy text-sm font-medium hover:underline">+ Nuevo Producto</button>
                 </div>
-                <div id="servicesList"></div>
+                <div id="inventoryList"></div>
             </div>
 
             <!-- Cotizaciones -->
@@ -280,9 +280,9 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                 <svg class="tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                 Clientes
             </div>
-            <div class="tab-btn" onclick="switchTab('services', 'Servicios')" id="tab-services">
+            <div class="tab-btn" onclick="switchTab('inventory', 'Inventario')" id="tab-inventory">
                 <svg class="tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                Servicios
+                Inventario
             </div>
             <div class="tab-btn" onclick="switchTab('quotes', 'Cotizaciones')" id="tab-quotes">
                 <svg class="tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -348,18 +348,21 @@ export const HTML_CONTENT = `<!DOCTYPE html>
             </div>
         </div>
 
-        <!-- Modal Servicios -->
-        <div id="addServiceModal" class="hidden fixed inset-0 bg-white z-50">
+        <!-- Modal Inventario -->
+        <div id="addProductModal" class="hidden fixed inset-0 bg-white z-50">
             <div class="p-8 h-full flex flex-col">
                 <div class="flex justify-between items-center mb-10">
-                    <h3 class="text-2xl font-light tracking-tight">Crear Servicio</h3>
-                    <button onclick="hideModal('addServiceModal')" class="text-neutral-400">Cancelar</button>
+                    <h3 class="text-2xl font-light tracking-tight">Registro de Producto</h3>
+                    <button onclick="hideModal('addProductModal')" class="text-neutral-400">Cancelar</button>
                 </div>
-                <div class="flex-1">
-                    <input type="text" id="sName" placeholder="Nombre (ej. Diseño Web)" class="input-clean">
-                    <input type="number" id="sPrice" placeholder="Precio Base (MXN)" class="input-clean">
+                <div class="flex-1 space-y-4">
+                    <input type="text" id="pName" placeholder="Nombre de Producto o Servicio" class="input-clean !mb-0">
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="number" id="pPrice" placeholder="Precio Venta (MXN)" class="input-clean !mb-0">
+                        <input type="number" id="pStock" placeholder="Stock / Inventario" class="input-clean !mb-0">
+                    </div>
                 </div>
-                <button onclick="saveService()" class="btn-dark mb-8">Guardar Servicio</button>
+                <button onclick="saveProduct()" class="btn-dark mb-8">Guardar en Catálogo</button>
             </div>
         </div>
 
@@ -519,7 +522,7 @@ export const HTML_CONTENT = `<!DOCTYPE html>
             let subtitle = "Gestión";
             if(tab === 'dashboard') { subtitle = "Resumen Operativo"; }
             if(tab === 'clients') { subtitle = "Directorio"; }
-            if(tab === 'services') { subtitle = "Portafolio"; }
+            if(tab === 'inventory') { subtitle = "Control de Inventario"; }
             if(tab === 'quotes') { subtitle = "Pendientes"; }
             if(tab === 'sales') { subtitle = "Ingresos"; }
             if(tab === 'expenses') { subtitle = "Costos"; }
@@ -528,7 +531,7 @@ export const HTML_CONTENT = `<!DOCTYPE html>
 
             if(tab === 'dashboard') updateDashboard();
             if(tab === 'clients') loadClients();
-            if(tab === 'services') loadServices();
+            if(tab === 'inventory') loadInventory();
             if(tab === 'quotes') loadQuotes();
             if(tab === 'sales') loadSales();
             if(tab === 'expenses') loadExpenses();
@@ -613,35 +616,40 @@ export const HTML_CONTENT = `<!DOCTYPE html>
             loadClients();
         }
 
-        // --- SERVICIOS / PRODUCTOS (Almacenado localmente por ahora) ---
-        function loadServices() {
-            const container = document.getElementById('servicesList');
-            const services = JSON.parse(localStorage.getItem('altus_services') || '[]');
-            if (services.length === 0) {
-                container.innerHTML = emptyState('Sin servicios', 'Agrega tu catálogo de servicios (Ej. Diseño Web).');
+        // --- INVENTARIO / CATÁLOGO ---
+        function loadInventory() {
+            const container = document.getElementById('inventoryList');
+            const products = JSON.parse(localStorage.getItem('altus_inventory') || '[]');
+            if (products.length === 0) {
+                container.innerHTML = emptyState('Catálogo vacío', 'Registra productos o servicios para control.');
                 return;
             }
-            container.innerHTML = services.map(s => \`
-            <div class="card flex justify-between items-center">
+            container.innerHTML = products.map(p => \`
+            <div class="card flex justify-between items-center relative">
+                \${p.stock !== undefined && p.stock !== '' ? \`<span class="absolute top-4 right-4 text-[0.6rem] uppercase tracking-widest font-bold px-2 py-1 rounded \${p.stock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">Stock: \${p.stock}</span>\` : ''}
                 <div>
-                    <h3 class="font-medium text-neutral-900">\${s.name}</h3>
-                    <p class="text-xs text-neutral-400 mt-1">Servicio de Agencia</p>
+                    <h3 class="font-medium text-neutral-900">\${p.name}</h3>
+                    <p class="text-xs text-neutral-400 mt-1">Categoría General</p>
                 </div>
                 <div class="text-neutral-900 font-light text-lg">
-                    $\${parseFloat(s.price).toLocaleString('es-MX', {minimumFractionDigits: 2})}
+                    $\${parseFloat(p.price).toLocaleString('es-MX', {minimumFractionDigits: 2})}
                 </div>
             </div>\`).join('');
         }
 
-        function saveService() {
-            const name = document.getElementById('sName').value;
-            const price = document.getElementById('sPrice').value;
-            if (!name || !price) return alert("Revisa los datos");
-            const services = JSON.parse(localStorage.getItem('altus_services') || '[]');
-            services.push({ id: crypto.randomUUID(), name, price });
-            localStorage.setItem('altus_services', JSON.stringify(services));
-            hideModal('addServiceModal');
-            loadServices();
+        function saveProduct() {
+            const name = document.getElementById('pName').value;
+            const price = document.getElementById('pPrice').value;
+            const stock = document.getElementById('pStock').value;
+            
+            if (!name || !price) return alert("Revisa el nombre y precio del producto");
+            
+            const inventory = JSON.parse(localStorage.getItem('altus_inventory') || '[]');
+            inventory.push({ id: crypto.randomUUID(), name, price, stock });
+            localStorage.setItem('altus_inventory', JSON.stringify(inventory));
+            
+            hideModal('addProductModal');
+            loadInventory();
         }
 
         // --- COTIZACIONES ---
