@@ -372,6 +372,8 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                 <button onclick="saveUser()" class="btn-dark mt-8 mb-8">Guardar Usuario</button>
             </div>
         </div>
+
+        <div id="addClientModal" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
             <div class="p-8 min-h-screen flex flex-col">
                 <div class="flex justify-between items-center mb-8">
                     <h3 class="text-2xl font-light tracking-tight">Nuevo Cliente</h3>
