@@ -19,6 +19,8 @@ router.delete('/clients/:id', ClientController.delete);
 // Rutas de Usuarios / Auth
 router.post('/users', UserController.create);
 router.get('/users', UserController.getAll);
+router.put('/users/:id', UserController.update);
+router.delete('/users/:id', UserController.delete);
 router.post('/auth/login', UserController.login);
 
 // Rutas de Gastos

@@ -17,6 +17,9 @@ export class User {
     @Column({ type: 'varchar', nullable: true })
     phone: string;
 
+    @Column({ type: 'varchar', nullable: true })
+    password: string;
+
     // WebAuthn Passkey (Huella/FaceID)
     @Column({ type: 'text', nullable: true })
     credential_id: string;

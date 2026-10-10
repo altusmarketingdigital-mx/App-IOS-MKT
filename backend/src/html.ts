@@ -173,16 +173,28 @@ export const HTML_CONTENT = `<!DOCTYPE html>
             
             <p class="text-white/60 text-sm tracking-widest uppercase mb-12">Acceso Privado</p>
             
-            <div class="w-full">
-                <input type="password" id="pinInput" placeholder="Ingresar PIN" class="input-clean text-center tracking-[0.5em] text-lg font-light border-white/20 text-white focus:border-brand-accent">
-                <p id="loginError" class="text-brand-accent text-xs text-center mb-6 uppercase tracking-wide font-bold hidden">Acceso Denegado</p>
+            <div class="w-full space-y-4">
+                <div>
+                    <input type="email" id="loginEmail" placeholder="Correo electrónico" class="input-clean text-center text-lg font-light border-white/20 text-white focus:border-brand-accent !mb-0 placeholder-white/40">
+                </div>
+                <div>
+                    <input type="password" id="loginPassword" placeholder="Contraseña" class="input-clean text-center tracking-[0.2em] text-lg font-light border-white/20 text-white focus:border-brand-accent !mb-0 placeholder-white/40">
+                </div>
                 
-                <button onclick="login()" class="btn-brand mb-4">
-                    Ingresar con PIN
+                <p id="loginError" class="text-brand-accent text-xs text-center uppercase tracking-wide font-bold hidden">Credenciales Incorrectas</p>
+                
+                <button onclick="login()" class="btn-brand mt-4">
+                    Ingresar a mi cuenta
                 </button>
                 
+                <div class="flex items-center gap-4 my-6">
+                    <div class="flex-1 h-px bg-white/20"></div>
+                    <span class="text-white/40 text-xs font-bold uppercase tracking-widest">o usa biometría</span>
+                    <div class="flex-1 h-px bg-white/20"></div>
+                </div>
+
                 <!-- Botón Face ID / Touch ID -->
-                <button onclick="loginWithFaceID()" class="w-full bg-transparent border border-white/30 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-medium hover:bg-white/10 transition">
+                <button onclick="loginWithFaceID()" class="w-full bg-transparent border border-white/30 text-white py-3 rounded-xl flex items-center justify-center gap-2 font-medium hover:bg-white/10 transition">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
                     Face ID / Touch ID
                 </button>
@@ -372,7 +384,7 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                 </div>
                 <div class="flex justify-between items-center mb-4">
                     <p class="text-xs text-neutral-400 uppercase tracking-widest">Equipo Registrado</p>
-                    <button onclick="showModal('addUserModal')" class="text-brand-navy text-sm font-medium hover:underline">+ Nuevo Usuario</button>
+                    <button onclick="document.getElementById('uId').value=''; document.getElementById('uName').value=''; document.getElementById('uEmail').value=''; document.getElementById('uPassword').value=''; document.getElementById('uPhone').value=''; document.getElementById('uCredentialId').value=''; document.getElementById('userModalTitle').innerText='Nuevo Usuario'; document.getElementById('btnRegisterBiometrics').classList.remove('hidden'); document.getElementById('bioSuccess').classList.add('hidden'); showModal('addUserModal')" class="text-brand-navy text-sm font-medium hover:underline">+ Nuevo Usuario</button>
                 </div>
                 <div id="usersList" class="flex-1 space-y-4"></div>
             </div>
@@ -382,12 +394,14 @@ export const HTML_CONTENT = `<!DOCTYPE html>
         <div id="addUserModal" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
             <div class="p-8 min-h-screen flex flex-col">
                 <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-2xl font-light tracking-tight">Nuevo Usuario</h3>
+                    <h3 class="text-2xl font-light tracking-tight" id="userModalTitle">Nuevo Usuario</h3>
                     <button onclick="hideModal('addUserModal')" class="text-neutral-400">Cancelar</button>
                 </div>
                 <div class="flex-1 space-y-4">
+                    <input type="hidden" id="uId">
                     <input type="text" id="uName" placeholder="Nombre Completo" class="input-clean !mb-0">
                     <input type="email" id="uEmail" placeholder="Correo Electrónico" class="input-clean !mb-0">
+                    <input type="password" id="uPassword" placeholder="Contraseña de Acceso" class="input-clean !mb-0">
                     <input type="tel" id="uPhone" placeholder="Teléfono" class="input-clean !mb-0">
                     
                     <label class="text-[0.6rem] uppercase tracking-widest text-neutral-400 mb-1 block mt-4">Rol del Sistema</label>
@@ -520,20 +534,35 @@ export const HTML_CONTENT = `<!DOCTYPE html>
             loadAllData();
         }
 
-        function login() {
-            const pin = document.getElementById('pinInput').value;
-            if (pin === 'ALTUS2026') {
-                apiKey = 'SECRET_TOKEN_ALTUS';
-                localStorage.setItem('altus_api_key', apiKey);
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('appScreen').classList.remove('hidden');
-                loadAllData();
-            } else {
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                if(response.ok && data.token) {
+                    apiKey = data.token;
+                    localStorage.setItem('altus_api_key', apiKey);
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('appScreen').classList.remove('hidden');
+                    loadAllData();
+                } else {
+                    document.getElementById('loginError').classList.remove('hidden');
+                    document.getElementById('loginError').innerText = data.error || 'Credenciales Incorrectas';
+                }
+            } catch (err) {
+                console.error(err);
                 document.getElementById('loginError').classList.remove('hidden');
+                document.getElementById('loginError').innerText = 'Error de conexión';
             }
         }
 
-        // Simulación de WebAuthn para Face ID / Touch ID
         async function loginWithFaceID() {
             try {
                 if (!window.PublicKeyCredential) {
@@ -547,13 +576,11 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                     timeout: 60000
                 };
                 
-                // Intentamos invocar la API nativa de biometría del iPad
                 const credential = await navigator.credentials.get({ publicKey: options });
                 
                 if (credential) {
                     const rawId = btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId)));
                     
-                    // Verificamos en el backend si esta huella pertenece a alguien
                     const response = await fetch('/api/auth/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -563,8 +590,11 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                     const data = await response.json();
                     
                     if(response.ok && data.token) {
-                        document.getElementById('pinInput').value = data.token;
-                        login(); // Esto los deja pasar si el token empata con el maestro
+                        apiKey = data.token;
+                        localStorage.setItem('altus_api_key', apiKey);
+                        document.getElementById('loginScreen').classList.add('hidden');
+                        document.getElementById('appScreen').classList.remove('hidden');
+                        loadAllData();
                     } else {
                         alert(data.error || "Huella no reconocida en el sistema.");
                     }
@@ -678,21 +708,64 @@ export const HTML_CONTENT = `<!DOCTYPE html>
         \`;
 
         // --- USUARIOS Y WEBAUTHN ---
+        let globalUsers = [];
+        
         async function loadUsers() {
             const container = document.getElementById('usersList');
-            const users = await apiRequest('/users');
-            if (!users || users.length === 0) {
+            globalUsers = await apiRequest('/users') || [];
+            if (globalUsers.length === 0) {
                 container.innerHTML = emptyState('Sin usuarios', 'Registra al primer miembro del equipo.');
                 return;
             }
-            container.innerHTML = users.map(u => \`
-            <div class="card !p-4 flex items-center justify-between">
+            container.innerHTML = globalUsers.map(u => \`
+            <div class="card !p-4 flex items-center justify-between group relative">
                 <div>
                     <h3 class="font-medium text-neutral-900">\${u.name}</h3>
                     <p class="text-xs text-neutral-400">\${u.email} • \${u.role}</p>
                 </div>
-                \${u.credential_id ? '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>' : ''}
+                <div class="flex items-center gap-3">
+                    \${u.credential_id ? '<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>' : ''}
+                    
+                    <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="openEditUser('\${u.id}')" class="p-1 text-neutral-400 hover:text-brand-navy">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </button>
+                        <button onclick="deleteUser('\${u.id}')" class="p-1 text-neutral-400 hover:text-red-500">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                </div>
             </div>\`).join('');
+        }
+
+        function openEditUser(id) {
+            const user = globalUsers.find(u => u.id === id);
+            if(!user) return;
+            
+            document.getElementById('userModalTitle').innerText = "Editar Usuario";
+            document.getElementById('uId').value = user.id;
+            document.getElementById('uName').value = user.name || '';
+            document.getElementById('uEmail').value = user.email || '';
+            document.getElementById('uPhone').value = user.phone || '';
+            document.getElementById('uPassword').value = user.password || '';
+            document.getElementById('uRole').value = user.role || 'Empleado';
+            document.getElementById('uCredentialId').value = user.credential_id || '';
+            
+            if (user.credential_id) {
+                document.getElementById('btnRegisterBiometrics').classList.add('hidden');
+                document.getElementById('bioSuccess').classList.remove('hidden');
+            } else {
+                document.getElementById('btnRegisterBiometrics').classList.remove('hidden');
+                document.getElementById('bioSuccess').classList.add('hidden');
+            }
+            
+            showModal('addUserModal');
+        }
+
+        async function deleteUser(id) {
+            if(!confirm('¿Estás seguro de que deseas eliminar este usuario del sistema?')) return;
+            await apiRequest(\`/users/\${id}\`, 'DELETE');
+            loadUsers();
         }
 
         async function registerFaceID() {
@@ -726,29 +799,42 @@ export const HTML_CONTENT = `<!DOCTYPE html>
         }
 
         async function saveUser() {
+            const id = document.getElementById('uId').value;
             const name = document.getElementById('uName').value;
             const email = document.getElementById('uEmail').value;
             if (!name || !email) return alert("Nombre y correo requeridos");
             
-            const newUser = {
-                name, email,
+            const userData = {
+                name,
+                email,
                 phone: document.getElementById('uPhone').value,
+                password: document.getElementById('uPassword').value,
                 role: document.getElementById('uRole').value,
                 credential_id: document.getElementById('uCredentialId').value
             };
+
+            let res;
+            if (id) {
+                res = await apiRequest(\`/users/\${id}\`, 'PUT', userData);
+            } else {
+                res = await apiRequest('/users', 'POST', userData);
+            }
             
-            const res = await apiRequest('/users', 'POST', newUser);
             if(res && res.error) {
                 return alert(res.error);
             }
+            
             hideModal('addUserModal');
             loadUsers();
             
             // Limpiar form
+            document.getElementById('uId').value = '';
             document.getElementById('uName').value = '';
             document.getElementById('uEmail').value = '';
+            document.getElementById('uPassword').value = '';
             document.getElementById('uPhone').value = '';
             document.getElementById('uCredentialId').value = '';
+            document.getElementById('userModalTitle').innerText = 'Nuevo Usuario';
             document.getElementById('btnRegisterBiometrics').classList.remove('hidden');
             document.getElementById('bioSuccess').classList.add('hidden');
         }
