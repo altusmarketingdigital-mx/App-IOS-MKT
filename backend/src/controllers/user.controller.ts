@@ -77,7 +77,7 @@ export class UserController {
                 user = await repo.findOne({ where: { credential_id } });
                 if (!user) return res.status(401).json({ error: 'Huella / FaceID no reconocida.' });
             } else if (email && password) {
-                user = await repo.findOne({ where: { email, password } });
+                user = await repo.findOne({ where: { email: email.toLowerCase().trim(), password: password.trim() } });
                 if (!user) return res.status(401).json({ error: 'Correo o contrasena incorrectos.' });
             } else {
                 return res.status(400).json({ error: 'Credenciales incompletas.' });
@@ -113,3 +113,4 @@ export class UserController {
         }
     }
 }
+
