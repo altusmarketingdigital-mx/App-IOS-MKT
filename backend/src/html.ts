@@ -320,18 +320,31 @@ export const HTML_CONTENT = `<!DOCTYPE html>
             </div>
         </div>
 
-        <div id="addClientModal" class="hidden fixed inset-0 bg-white z-50">
-            <div class="p-8 h-full flex flex-col">
-                <div class="flex justify-between items-center mb-10">
+        <div id="addClientModal" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
+            <div class="p-8 min-h-screen flex flex-col">
+                <div class="flex justify-between items-center mb-8">
                     <h3 class="text-2xl font-light tracking-tight">Nuevo Cliente</h3>
                     <button onclick="hideModal('addClientModal')" class="text-neutral-400">Cancelar</button>
                 </div>
-                <div class="flex-1">
-                    <input type="text" id="cName" placeholder="Nombre de la empresa" class="input-clean">
-                    <input type="tel" id="cPhone" placeholder="Teléfono" class="input-clean">
-                    <input type="email" id="cEmail" placeholder="Correo Electrónico" class="input-clean">
+                <div class="flex-1 space-y-4">
+                    <input type="text" id="cName" placeholder="Razón Social / Nombre Comercial" class="input-clean !mb-0">
+                    <input type="text" id="cContact" placeholder="Representante / Contacto Principal" class="input-clean !mb-0">
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="text" id="cRFC" placeholder="RFC (Opcional)" class="input-clean !mb-0">
+                        <select id="cType" class="input-clean !mb-0 bg-transparent text-neutral-500">
+                            <option value="Prospecto">Prospecto</option>
+                            <option value="Activo">Cliente Activo</option>
+                            <option value="Inactivo">Inactivo</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="tel" id="cPhone" placeholder="Teléfono" class="input-clean !mb-0">
+                        <input type="email" id="cEmail" placeholder="Correo Electrónico" class="input-clean !mb-0">
+                    </div>
+                    <input type="text" id="cAddress" placeholder="Dirección Física" class="input-clean !mb-0">
+                    <input type="url" id="cWebsite" placeholder="Sitio Web (ej. www.altus.mx)" class="input-clean !mb-0">
                 </div>
-                <button onclick="saveClient()" class="btn-dark mb-8">Guardar Cliente</button>
+                <button onclick="saveClient()" class="btn-dark mt-8 mb-8">Guardar Cliente</button>
             </div>
         </div>
 
@@ -524,18 +537,41 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                 return;
             }
             container.innerHTML = clients.map(c => \`
-            <div class="card flex items-center justify-between">
+            <div class="card flex flex-col gap-2 relative">
+                \${c.client_type ? \`<span class="absolute top-4 right-4 text-[0.6rem] uppercase tracking-widest font-bold px-2 py-1 rounded bg-neutral-100 \${c.client_type === 'Activo' ? 'text-green-600' : 'text-neutral-500'}">\${c.client_type}</span>\` : ''}
                 <div>
-                    <h3 class="font-medium text-neutral-900">\${c.name}</h3>
-                    <p class="text-xs text-neutral-400 mt-1">\${c.phone || 'Sin teléfono'}</p>
+                    <h3 class="font-medium text-lg text-neutral-900">\${c.name}</h3>
+                    \${c.contact_name ? \`<p class="text-sm text-neutral-600 mt-1">Representante: \${c.contact_name}</p>\` : ''}
                 </div>
+                <div class="flex items-center gap-4 mt-2">
+                    \${c.phone ? \`<p class="text-xs text-neutral-400 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>\${c.phone}</p>\` : ''}
+                    \${c.email ? \`<p class="text-xs text-neutral-400 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>\${c.email}</p>\` : ''}
+                </div>
+                \${c.rfc || c.website ? \`
+                <div class="flex items-center gap-4 mt-1 border-t border-neutral-50 pt-2">
+                    \${c.rfc ? \`<p class="text-[0.65rem] text-neutral-400 uppercase tracking-wider">RFC: \${c.rfc}</p>\` : ''}
+                    \${c.website ? \`<a href="\${c.website}" target="_blank" class="text-[0.65rem] text-brand-accent uppercase tracking-wider hover:underline">Sitio Web</a>\` : ''}
+                </div>\` : ''}
             </div>\`).join('');
         }
 
         async function saveClient() {
             const name = document.getElementById('cName').value;
-            if (!name) return alert("El nombre es requerido");
-            const newClient = { id: crypto.randomUUID(), name, phone: document.getElementById('cPhone').value, email: document.getElementById('cEmail').value, isSynced: true };
+            if (!name) return alert("El nombre comercial o razón social es requerido");
+            
+            const newClient = { 
+                id: crypto.randomUUID(), 
+                name, 
+                contact_name: document.getElementById('cContact').value,
+                rfc: document.getElementById('cRFC').value,
+                client_type: document.getElementById('cType').value,
+                phone: document.getElementById('cPhone').value, 
+                email: document.getElementById('cEmail').value,
+                address: document.getElementById('cAddress').value,
+                website: document.getElementById('cWebsite').value,
+                isSynced: true 
+            };
+            
             await apiRequest('/clients', 'POST', newClient);
             hideModal('addClientModal');
             loadClients();

@@ -5,7 +5,7 @@ import { Client } from '../models/Client';
 export class ClientController {
     static async create(req: Request, res: Response) {
         try {
-            const { id, name, phone, email, address } = req.body;
+            const { id, name, phone, email, address, contact_name, rfc, website, client_type } = req.body;
             const clientRepository = AppDataSource.getRepository(Client);
             
             const client = clientRepository.create({
@@ -13,7 +13,11 @@ export class ClientController {
                 name,
                 phone,
                 email,
-                address
+                address,
+                contact_name,
+                rfc,
+                website,
+                client_type
             });
 
             await clientRepository.save(client);
