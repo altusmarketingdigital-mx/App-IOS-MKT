@@ -13,6 +13,8 @@ const router = Router();
 // Rutas de Clientes
 router.post('/clients', ClientController.create);
 router.get('/clients', ClientController.getAll);
+router.put('/clients/:id', ClientController.update);
+router.delete('/clients/:id', ClientController.delete);
 
 // Rutas de Usuarios / Auth
 router.post('/users', UserController.create);

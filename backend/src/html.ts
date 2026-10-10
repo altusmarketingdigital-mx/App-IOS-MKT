@@ -267,7 +267,7 @@ export const HTML_CONTENT = `<!DOCTYPE html>
             <div id="view-clients" class="view-section hidden fade-in">
                 <div class="flex justify-between items-center mb-6">
                     <p class="text-xs text-neutral-400 uppercase tracking-widest">Directorio Activo</p>
-                    <button onclick="showModal('addClientModal')" class="text-brand-navy text-sm font-medium hover:underline">+ Añadir</button>
+                    <button onclick="document.getElementById('cId').value=''; document.getElementById('cName').value=''; document.getElementById('cContact').value=''; document.getElementById('cRFC').value=''; document.getElementById('cPhone').value=''; document.getElementById('cEmail').value=''; document.getElementById('cAddress').value=''; document.getElementById('cWebsite').value=''; document.getElementById('clientModalTitle').innerText='Nuevo Cliente'; showModal('addClientModal')" class="text-brand-navy text-sm font-medium hover:underline">+ Añadir</button>
                 </div>
                 <div id="clientsList"></div>
             </div>
@@ -415,10 +415,11 @@ export const HTML_CONTENT = `<!DOCTYPE html>
         <div id="addClientModal" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
             <div class="p-8 min-h-screen flex flex-col">
                 <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-2xl font-light tracking-tight">Nuevo Cliente</h3>
+                    <h3 class="text-2xl font-light tracking-tight" id="clientModalTitle">Nuevo Cliente</h3>
                     <button onclick="hideModal('addClientModal')" class="text-neutral-400">Cancelar</button>
                 </div>
                 <div class="flex-1 space-y-4">
+                    <input type="hidden" id="cId">
                     <input type="text" id="cName" placeholder="Razón Social / Nombre Comercial" class="input-clean !mb-0">
                     <input type="text" id="cContact" placeholder="Representante / Contacto Principal" class="input-clean !mb-0">
                     <div class="grid grid-cols-2 gap-4">
@@ -768,17 +769,20 @@ export const HTML_CONTENT = `<!DOCTYPE html>
         }
 
         // --- CLIENTES ---
+        let globalClients = [];
+        
         async function loadClients() {
             const container = document.getElementById('clientsList');
-            const clients = await apiRequest('/clients');
-            if (!clients || clients.length === 0) {
+            globalClients = await apiRequest('/clients') || [];
+            
+            if (globalClients.length === 0) {
                 container.innerHTML = emptyState('Sin clientes', 'Tu directorio está vacío.');
                 return;
             }
-            container.innerHTML = clients.map(c => {
+            container.innerHTML = globalClients.map(c => {
                 const initial = c.name ? c.name.charAt(0).toUpperCase() : 'C';
                 return \`
-                <div class="card flex gap-4 relative items-start">
+                <div class="card flex gap-4 relative items-start group">
                     \${c.client_type ? \`<span class="absolute top-4 right-4 text-[0.6rem] uppercase tracking-widest font-bold px-2 py-1 rounded \${c.client_type === 'Activo' ? 'bg-green-100/50 text-green-700' : 'bg-neutral-100 text-neutral-500'}">\${c.client_type}</span>\` : ''}
                     
                     <div class="w-12 h-12 shrink-0 bg-gradient-to-br from-brand-navy to-slate-700 rounded-full flex items-center justify-center text-white font-light text-lg shadow-inner">
@@ -786,7 +790,7 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                     </div>
 
                     <div class="flex-1">
-                        <h3 class="font-medium text-lg text-neutral-900">\${c.name}</h3>
+                        <h3 class="font-medium text-lg text-neutral-900 pr-16">\${c.name}</h3>
                         \${c.contact_name ? \`<p class="text-sm text-neutral-500 mt-0.5 flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>\${c.contact_name}</p>\` : ''}
                         
                         <div class="flex items-center gap-4 mt-3">
@@ -799,17 +803,51 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                             \${c.rfc ? \`<p class="text-[0.65rem] text-neutral-400 uppercase tracking-wider flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>RFC: \${c.rfc}</p>\` : ''}
                             \${c.website ? \`<a href="\${c.website}" target="_blank" class="text-[0.65rem] text-brand-accent uppercase tracking-wider flex items-center gap-1 hover:underline"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>Sitio Web</a>\` : ''}
                         </div>\` : ''}
+                        
+                        <!-- Actions -->
+                        <div class="absolute bottom-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="openEditClient('\${c.id}')" class="p-1.5 text-neutral-400 hover:text-brand-navy bg-white rounded shadow-sm border border-neutral-100">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </button>
+                            <button onclick="deleteClient('\${c.id}')" class="p-1.5 text-neutral-400 hover:text-red-500 bg-white rounded shadow-sm border border-neutral-100">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
                     </div>
                 </div>\`;
             }).join('');
         }
+        
+        function openEditClient(id) {
+            const client = globalClients.find(c => c.id === id);
+            if(!client) return;
+            
+            document.getElementById('clientModalTitle').innerText = "Editar Cliente";
+            document.getElementById('cId').value = client.id;
+            document.getElementById('cName').value = client.name || '';
+            document.getElementById('cContact').value = client.contact_name || '';
+            document.getElementById('cRFC').value = client.rfc || '';
+            document.getElementById('cType').value = client.client_type || 'Prospecto';
+            document.getElementById('cPhone').value = client.phone || '';
+            document.getElementById('cEmail').value = client.email || '';
+            document.getElementById('cAddress').value = client.address || '';
+            document.getElementById('cWebsite').value = client.website || '';
+            
+            showModal('addClientModal');
+        }
+        
+        async function deleteClient(id) {
+            if(!confirm('¿Estás seguro de que deseas eliminar este cliente?')) return;
+            await apiRequest(\`/clients/\${id}\`, 'DELETE');
+            loadClients();
+        }
 
         async function saveClient() {
+            const id = document.getElementById('cId').value;
             const name = document.getElementById('cName').value;
             if (!name) return alert("El nombre comercial o razón social es requerido");
             
-            const newClient = { 
-                id: crypto.randomUUID(), 
+            const clientData = { 
                 name, 
                 contact_name: document.getElementById('cContact').value,
                 rfc: document.getElementById('cRFC').value,
@@ -821,7 +859,25 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                 isSynced: true 
             };
             
-            await apiRequest('/clients', 'POST', newClient);
+            if (id) {
+                await apiRequest(\`/clients/\${id}\`, 'PUT', clientData);
+            } else {
+                clientData.id = crypto.randomUUID();
+                await apiRequest('/clients', 'POST', clientData);
+            }
+            
+            // Limpiar Modal
+            document.getElementById('cId').value = '';
+            document.getElementById('cName').value = '';
+            document.getElementById('cContact').value = '';
+            document.getElementById('cRFC').value = '';
+            document.getElementById('cType').value = 'Prospecto';
+            document.getElementById('cPhone').value = '';
+            document.getElementById('cEmail').value = '';
+            document.getElementById('cAddress').value = '';
+            document.getElementById('cWebsite').value = '';
+            document.getElementById('clientModalTitle').innerText = "Nuevo Cliente";
+            
             hideModal('addClientModal');
             loadClients();
         }

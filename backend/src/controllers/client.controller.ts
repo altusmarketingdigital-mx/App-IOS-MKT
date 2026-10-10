@@ -37,4 +37,33 @@ export class ClientController {
             return res.status(500).json({ error: 'Internal Server Error' });
         }
     }
+
+    static async update(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const clientRepository = AppDataSource.getRepository(Client);
+            const client = await clientRepository.findOneBy({ id });
+            if (!client) return res.status(404).json({ error: 'Cliente no encontrado' });
+
+            clientRepository.merge(client, req.body);
+            await clientRepository.save(client);
+            return res.status(200).json(client);
+        } catch (error) {
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+
+    static async delete(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const clientRepository = AppDataSource.getRepository(Client);
+            const client = await clientRepository.findOneBy({ id });
+            if (!client) return res.status(404).json({ error: 'Cliente no encontrado' });
+
+            await clientRepository.remove(client);
+            return res.status(200).json({ message: 'Cliente eliminado correctamente' });
+        } catch (error) {
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
 }
