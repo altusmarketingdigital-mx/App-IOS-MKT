@@ -6,7 +6,7 @@ import { Client } from '../models/Client';
 export class QuoteController {
     static async create(req: Request, res: Response) {
         try {
-            const { id, client_id, subtotal, taxes, total, status, created_at } = req.body;
+            const { id, client_id, subtotal, taxes, total, status, items, notes, created_at } = req.body;
             
             const clientRepository = AppDataSource.getRepository(Client);
             const quoteRepository = AppDataSource.getRepository(Quote);
@@ -23,6 +23,8 @@ export class QuoteController {
                 taxes,
                 total,
                 status: status || 'Pending',
+                items: items || null,
+                notes: notes || '',
                 created_at: created_at ? new Date(created_at) : new Date()
             });
 

@@ -22,6 +22,12 @@ export class Quote {
     @Column({ type: 'varchar', default: 'Pending' })
     status: string; // Pending, Converted, Cancelled
 
+    @Column({ type: 'jsonb', nullable: true })
+    items: any; // Array of selected services/products
+
+    @Column({ type: 'text', nullable: true })
+    notes: string;
+
     @CreateDateColumn()
     created_at: Date;
 }
