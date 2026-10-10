@@ -1,4 +1,4 @@
-export const HTML_CONTENT = `<!DOCTYPE html>
+﻿export const HTML_CONTENT = `<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -526,15 +526,25 @@ export const HTML_CONTENT = `<!DOCTYPE html>
 
     <script>
         const API_URL = '/api';
-        let apiKey = localStorage.getItem('altus_api_key');
-
+                        let apiKey = localStorage.getItem('altus_api_key');
+        let currentUser = null;
+        let storedUser = localStorage.getItem('altus_user');
+  
         if (apiKey) {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('appScreen').classList.remove('hidden');
+            if (storedUser) {
+                try {
+                    currentUser = JSON.parse(storedUser);
+                    setTimeout(() => {
+                        document.getElementById('headerSubtitle').innerText = currentUser.role + ' - ' + currentUser.name;
+                    }, 50);
+                } catch(e) {}
+            }
             loadAllData();
         }
 
-        async function login() {
+                async function login() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
             
@@ -548,9 +558,14 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                 const data = await response.json();
                 if(response.ok && data.token) {
                     apiKey = data.token;
+                    currentUser = data.user;
                     localStorage.setItem('altus_api_key', apiKey);
+                    localStorage.setItem('altus_user', JSON.stringify(currentUser));
+                    
                     document.getElementById('loginScreen').classList.add('hidden');
                     document.getElementById('appScreen').classList.remove('hidden');
+                    
+                    renderUserSession();
                     loadAllData();
                 } else {
                     document.getElementById('loginError').classList.remove('hidden');
@@ -591,9 +606,14 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                     
                     if(response.ok && data.token) {
                         apiKey = data.token;
+                        currentUser = data.user;
                         localStorage.setItem('altus_api_key', apiKey);
+                        localStorage.setItem('altus_user', JSON.stringify(currentUser));
+                        
                         document.getElementById('loginScreen').classList.add('hidden');
                         document.getElementById('appScreen').classList.remove('hidden');
+                        
+                        renderUserSession();
                         loadAllData();
                     } else {
                         alert(data.error || "Huella no reconocida en el sistema.");
@@ -604,11 +624,24 @@ export const HTML_CONTENT = `<!DOCTYPE html>
                 alert("Proceso biométrico cancelado o no soportado.");
             }
         }
-        
+
+        function renderUserSession() {
+            if (currentUser) {
+                document.getElementById('headerSubtitle').innerText = currentUser.role + ' - ' + currentUser.name;
+            } else {
+                document.getElementById('headerSubtitle').innerText = "Panel Operativo";
+            }
+        }
+
         function logout() {
             localStorage.removeItem('altus_api_key');
+            localStorage.removeItem('altus_user');
             apiKey = null;
-            document.getElementById('pinInput').value = '';
+            currentUser = null;
+            
+            if(document.getElementById('loginEmail')) document.getElementById('loginEmail').value = '';
+            if(document.getElementById('loginPassword')) document.getElementById('loginPassword').value = '';
+            
             document.getElementById('appScreen').classList.add('hidden');
             document.getElementById('loginScreen').classList.remove('hidden');
             hideModal('settingsModal');
@@ -1115,3 +1148,6 @@ export const HTML_CONTENT = `<!DOCTYPE html>
     </script>
 </body>
 </html>`;
+
+
+
