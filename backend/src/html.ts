@@ -264,7 +264,7 @@
 
                 <p class="text-xs text-neutral-400 uppercase tracking-widest mb-4">Acciones Rápidas</p>
                 <div class="grid grid-cols-2 gap-4">
-                    <button onclick="switchTab('quotes', 'Cotizaciones'); openQuoteModal()" class="btn-outline flex items-center justify-center gap-2">
+                    <button onclick="switchTab('quotes', 'Cotizaciones'); showModal('addQuoteModal')" class="btn-outline flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"></path></svg>
                         Nueva Cotización
                     </button>
@@ -297,7 +297,7 @@
             <div id="view-quotes" class="view-section hidden fade-in">
                 <div class="flex justify-between items-center mb-6">
                     <p class="text-xs text-neutral-400 uppercase tracking-widest">Enviadas</p>
-                    <button onclick="openQuoteModal()" class="text-brand-navy text-sm font-medium hover:underline">+ Nueva</button>
+                    <button onclick="showModal('addQuoteModal')" class="text-brand-navy text-sm font-medium hover:underline">+ Nueva</button>
                 </div>
                 <div id="quotesList"></div>
             </div>
@@ -508,23 +508,17 @@
             </div>
         </div>
 
-        <div id="addQuoteModal" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
-            <div class="p-8 min-h-screen flex flex-col">
+        <div id="addQuoteModal" class="hidden fixed inset-0 bg-white z-50">
+            <div class="p-8 h-full flex flex-col">
                 <div class="flex justify-between items-center mb-10">
-                    <h3 class="text-2xl font-light tracking-tight">Generar Cotización</h3>
+                    <h3 class="text-2xl font-light tracking-tight">Nueva Cotización</h3>
                     <button onclick="hideModal('addQuoteModal')" class="text-neutral-400">Cancelar</button>
                 </div>
-                <div class="flex-1 space-y-4">
-                    <label class="text-[0.6rem] uppercase tracking-widest text-neutral-400 mb-1 block">Seleccionar Cliente</label>
-                    <select id="qClient" class="input-clean !mb-0 bg-transparent text-neutral-900"></select>
-                    
-                    <label class="text-[0.6rem] uppercase tracking-widest text-neutral-400 mb-1 block mt-4">Producto o Servicio</label>
-                    <select id="qProduct" class="input-clean !mb-0 bg-transparent text-neutral-900" onchange="updateQuoteTotal()"></select>
-
-                    <input type="number" id="qTotal" placeholder="Monto Total (Automático)" class="input-clean mt-4" readonly>
-                    <textarea id="qNotes" placeholder="Notas adicionales para el cliente (opcional)" class="input-clean mt-4 h-24 resize-none"></textarea>
+                <div class="flex-1">
+                    <input type="text" id="qDesc" placeholder="Concepto o Proyecto" class="input-clean">
+                    <input type="number" id="qTotal" placeholder="Monto Total" class="input-clean">
                 </div>
-                <button onclick="saveQuote()" class="btn-dark mt-8 mb-8">Guardar y Generar PDF</button>
+                <button onclick="saveQuote()" class="btn-dark mb-8">Generar Cotización</button>
             </div>
         </div>
 
@@ -1073,193 +1067,41 @@
             loadInventory();
         }
 
-                // --- COTIZACIONES ---
-        function openQuoteModal() {
-            const clientSelect = document.getElementById('qClient');
-            clientSelect.innerHTML = '<option value="">Selecciona un Cliente...</option>';
-            globalClients.forEach(c => {
-                clientSelect.innerHTML += <option value=" + c.id + "> + c.name + </option>;
-            });
-
-            const productSelect = document.getElementById('qProduct');
-            productSelect.innerHTML = '<option value="">Selecciona Producto/Servicio...</option>';
-            const inventory = JSON.parse(localStorage.getItem('altus_inventory') || '[]');
-            inventory.forEach(p => {
-                productSelect.innerHTML += <option value=" + p.id + " data-price=" + p.price + "> + p.name +  ($ + p.price + )</option>;
-            });
-
-            document.getElementById('qTotal').value = '';
-            document.getElementById('qNotes').value = '';
-            showModal('addQuoteModal');
-        }
-
-        function updateQuoteTotal() {
-            const productSelect = document.getElementById('qProduct');
-            if (productSelect.selectedIndex > 0) {
-                const price = productSelect.options[productSelect.selectedIndex].getAttribute('data-price');
-                document.getElementById('qTotal').value = price;
-            } else {
-                document.getElementById('qTotal').value = '';
-            }
-        }
-
+        // --- COTIZACIONES ---
         async function loadQuotes() {
             const container = document.getElementById('quotesList');
             const quotes = await apiRequest('/quotes');
             if (!quotes || quotes.length === 0) {
-                container.innerHTML = emptyState('Sin cotizaciones', 'Genera cotizaciones profesionales.');
+                container.innerHTML = emptyState('Sin cotizaciones', 'Crea una nueva propuesta.');
                 return;
             }
-            container.innerHTML = quotes.map(q => {
-                let clientName = q.client ? q.client.name : 'Desconocido';
-                let productName = 'Servicio';
-                if (q.items && q.items[0]) {
-                    productName = q.items[0].name;
-                }
-                
-                return 
-            <div class="card !p-4 flex items-center justify-between group relative">
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="status-badge"> + q.status + </span>
-                        <span class="text-xs font-bold text-neutral-400 uppercase tracking-widest"> + new Date(q.created_at).toLocaleDateString() + </span>
-                    </div>
-                    <h3 class="font-medium text-neutral-900"> + clientName + </h3>
-                    <p class="text-xs text-neutral-400"> + productName + </p>
+            container.innerHTML = quotes.map(q => \`
+            <div class="card">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="status-badge">\${q.status}</span>
+                    <h3 class="font-light text-2xl text-neutral-900">$\${q.total.toLocaleString('es-MX', {minimumFractionDigits: 2})}</h3>
                 </div>
-                <div class="flex items-center gap-4">
-                    <span class="font-light text-lg text-brand-navy">$ + Number(q.total).toLocaleString('es-MX', {minimumFractionDigits: 2}) + </span>
-                    <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onclick="approveQuote(' + q.id + ',  + q.total + )" class="p-1 text-green-500 hover:text-green-600" title="Aprobar y cobrar">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        </button>
-                    </div>
-                </div>
-            </div>;
-            }).join('');
-        }
-
-        function generateQuotePDF(quoteData, clientName, productData) {
-            // Generar plantilla HTML
-            const template = document.createElement('div');
-            template.innerHTML = 
-                <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #152336; max-width: 800px; margin: auto;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #d9664c; padding-bottom: 20px; margin-bottom: 30px;">
-                        <div>
-                            <h1 style="font-size: 32px; font-weight: 300; margin: 0; color: #152336;">COTIZACIÓN</h1>
-                            <p style="font-size: 12px; color: #666; margin-top: 5px; text-transform: uppercase; letter-spacing: 2px;">Altus MKT Digital</p>
-                        </div>
-                        <div style="text-align: right;">
-                            <p style="margin: 0; font-size: 14px; font-weight: bold;">Folio: # + quoteData.id.substring(0,8).toUpperCase() + </p>
-                            <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;"> + new Date().toLocaleDateString() + </p>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-bottom: 40px;">
-                        <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #999; margin-bottom: 5px;">Preparado para:</p>
-                        <h2 style="font-size: 20px; margin: 0;"> + clientName + </h2>
-                    </div>
-
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px;">
-                        <thead>
-                            <tr style="border-bottom: 1px solid #eee;">
-                                <th style="text-align: left; padding: 10px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #999;">Descripción</th>
-                                <th style="text-align: right; padding: 10px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #999;">Importe</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr style="border-bottom: 1px solid #eee;">
-                                <td style="padding: 15px 0;">
-                                    <p style="margin: 0; font-weight: bold; font-size: 16px;"> + productData.name + </p>
-                                     + (productData.desc ? <p style="margin: 5px 0 0 0; font-size: 13px; color: #666;"> + productData.desc + </p> : '') + 
-                                </td>
-                                <td style="text-align: right; padding: 15px 0; font-size: 16px;">
-                                    $ + Number(productData.price).toLocaleString('es-MX', {minimumFractionDigits:2}) + 
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <div style="display: flex; justify-content: flex-end; margin-bottom: 40px;">
-                        <div style="width: 300px;">
-                            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
-                                <span style="color: #666;">Subtotal:</span>
-                                <span>$ + Number(quoteData.subtotal).toLocaleString('es-MX', {minimumFractionDigits:2}) + </span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
-                                <span style="color: #666;">IVA (16%):</span>
-                                <span>$ + Number(quoteData.taxes).toLocaleString('es-MX', {minimumFractionDigits:2}) + </span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 15px 0; font-size: 20px; font-weight: bold; color: #152336;">
-                                <span>Total:</span>
-                                <span>$ + Number(quoteData.total).toLocaleString('es-MX', {minimumFractionDigits:2}) + </span>
-                            </div>
-                        </div>
-                    </div>
-
-                     + (quoteData.notes ? 
-                    <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; font-size: 14px; color: #666;">
-                        <strong>Notas Adicionales:</strong><br/>
-                         + quoteData.notes.replace(/\n/g, '<br>') + 
-                    </div>
-                     : '') + 
-                    
-                    <div style="margin-top: 50px; text-align: center; font-size: 12px; color: #999;">
-                        <p>Cotización válida por 15 días.</p>
-                        <p>Altus MKT Digital • Confianza y Excelencia</p>
-                    </div>
-                </div>
-            ;
-            
-            const opt = {
-                margin:       0,
-                filename:     'Cotizacion_Altus_' + clientName.replace(/\s+/g, '_') + '.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-            
-            html2pdf().set(opt).from(template).save();
+                <button onclick="approveQuote('\${q.id}', \${q.total})" class="w-full bg-neutral-100 text-neutral-900 py-3 rounded-lg text-sm font-medium hover:bg-neutral-200 transition">Cerrar Venta (Ganada)</button>
+            </div>\`).join('');
         }
 
         async function saveQuote() {
-            const client_id = document.getElementById('qClient').value;
-            const product_id = document.getElementById('qProduct').value;
-            const totalStr = document.getElementById('qTotal').value;
-            const notes = document.getElementById('qNotes').value;
-
-            if (!client_id || !product_id || !totalStr) return alert("Selecciona un cliente y un producto válido");
-            
-            const total = parseFloat(totalStr);
-            const subtotal = total / 1.16;
-            const taxes = total - subtotal;
-
-            const inventory = JSON.parse(localStorage.getItem('altus_inventory') || '[]');
-            const product = inventory.find(p => p.id === product_id);
-            const client = globalClients.find(c => c.id === client_id);
-
-            const items = [ product ]; // Guardamos info del producto en el JSONB
-
-            const newQuote = { 
-                id: crypto.randomUUID(), 
-                client_id,
-                subtotal,
-                taxes,
-                total,
-                items,
-                notes,
-                status: 'Pendiente'
-            };
-            
+            const total = parseFloat(document.getElementById('qTotal').value);
+            if (!total) return alert("Monto inválido");
+            const newQuote = { id: crypto.randomUUID(), total, status: 'Pendiente', isSynced: true };
             await apiRequest('/quotes', 'POST', newQuote);
             hideModal('addQuoteModal');
             loadQuotes();
-
-            // Generar PDF al instante
-            generateQuotePDF(newQuote, client.name, product);
         }
 
         // --- VENTAS ---
+        async function approveQuote(quoteId, total) {
+            if(!confirm('¿Convertir esta cotización en ingreso cerrado?')) return;
+            const newSale = { id: crypto.randomUUID(), total, status: 'Pagado', isSynced: true };
+            await apiRequest('/sales', 'POST', newSale);
+            switchTab('sales', 'Ventas');
+        }
+
         async function loadSales() {
             const container = document.getElementById('salesList');
             const sales = await apiRequest('/sales');
@@ -1306,9 +1148,6 @@
     </script>
 </body>
 </html>`;
-
-
-
 
 
 
