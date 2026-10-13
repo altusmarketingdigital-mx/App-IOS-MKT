@@ -1,4 +1,4 @@
-﻿export const HTML_CONTENT = `<!DOCTYPE html>
+export const HTML_CONTENT = `<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -7,6 +7,7 @@
     <meta name="theme-color" content="#152336">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2953/2953330.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -264,7 +265,7 @@
 
                 <p class="text-xs text-neutral-400 uppercase tracking-widest mb-4">Acciones Rápidas</p>
                 <div class="grid grid-cols-2 gap-4">
-                    <button onclick="switchTab('quotes', 'Cotizaciones'); showModal('addQuoteModal')" class="btn-outline flex items-center justify-center gap-2">
+                    <button onclick="switchTab('quotes', 'Cotizaciones'); openNewQuoteModal()" class="btn-outline flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"></path></svg>
                         Nueva Cotización
                     </button>
@@ -297,7 +298,7 @@
             <div id="view-quotes" class="view-section hidden fade-in">
                 <div class="flex justify-between items-center mb-6">
                     <p class="text-xs text-neutral-400 uppercase tracking-widest">Enviadas</p>
-                    <button onclick="showModal('addQuoteModal')" class="text-brand-navy text-sm font-medium hover:underline">+ Nueva</button>
+                    <button onclick="openNewQuoteModal()" class="text-brand-navy text-sm font-medium hover:underline">+ Nueva</button>
                 </div>
                 <div id="quotesList"></div>
             </div>
@@ -508,17 +509,51 @@
             </div>
         </div>
 
-        <div id="addQuoteModal" class="hidden fixed inset-0 bg-white z-50">
-            <div class="p-8 h-full flex flex-col">
-                <div class="flex justify-between items-center mb-10">
-                    <h3 class="text-2xl font-light tracking-tight">Nueva Cotización</h3>
-                    <button onclick="hideModal('addQuoteModal')" class="text-neutral-400">Cancelar</button>
+        <div id="addQuoteModal" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
+            <div class="p-8 min-h-screen flex flex-col">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h3 class="text-2xl font-light tracking-tight text-neutral-900">Nueva Cotización</h3>
+                        <p class="text-xs text-neutral-400 mt-1">Selecciona el cliente y servicio del catálogo</p>
+                    </div>
+                    <button onclick="hideModal('addQuoteModal')" class="text-neutral-400 hover:text-neutral-600">Cancelar</button>
                 </div>
-                <div class="flex-1">
-                    <input type="text" id="qDesc" placeholder="Concepto o Proyecto" class="input-clean">
-                    <input type="number" id="qTotal" placeholder="Monto Total" class="input-clean">
+                <div class="flex-1 space-y-5">
+                    <div>
+                        <label class="text-[0.65rem] uppercase tracking-widest text-neutral-400 mb-1.5 block font-semibold">1. Cliente</label>
+                        <select id="qClient" class="input-clean !mb-0 bg-white border border-neutral-200 text-neutral-900 text-base font-normal">
+                            <option value="">Selecciona un cliente...</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="text-[0.65rem] uppercase tracking-widest text-neutral-400 mb-1.5 block font-semibold">2. Servicio / Producto</label>
+                        <select id="qProduct" class="input-clean !mb-0 bg-white border border-neutral-200 text-neutral-900 text-base font-normal" onchange="updateQuoteTotal()">
+                            <option value="">Selecciona un servicio o producto...</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-[0.65rem] uppercase tracking-widest text-neutral-400 mb-1.5 block font-semibold">3. Importe Total (MXN)</label>
+                        <input type="number" id="qTotal" placeholder="Monto total ($0.00)" class="input-clean !mb-0 bg-neutral-50 font-semibold text-lg text-brand-navy">
+                    </div>
+
+                    <div>
+                        <label class="text-[0.65rem] uppercase tracking-widest text-neutral-400 mb-1.5 block font-semibold">4. Notas o Condiciones (Opcional)</label>
+                        <textarea id="qNotes" placeholder="Detalles de la entrega, tiempos, vigencia..." class="input-clean !mb-0 h-24 resize-none"></textarea>
+                    </div>
                 </div>
-                <button onclick="saveQuote()" class="btn-dark mb-8">Generar Cotización</button>
+
+                <div class="pt-6 space-y-3 pb-8">
+                    <button onclick="saveAndGenerateQuote('pdf')" class="btn-brand w-full flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Guardar y Descargar PDF
+                    </button>
+                    <button onclick="saveAndGenerateQuote('image')" class="btn-outline w-full flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        Guardar y Descargar como Imagen
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -1068,30 +1103,274 @@
         }
 
         // --- COTIZACIONES ---
+        function openNewQuoteModal() {
+            const clientSel = document.getElementById('qClient');
+            clientSel.innerHTML = '<option value="">-- Selecciona un Cliente --</option>';
+            if (globalClients && globalClients.length > 0) {
+                globalClients.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name + (c.contact_name ? ' (' + c.contact_name + ')' : '');
+                    clientSel.appendChild(opt);
+                });
+            } else {
+                clientSel.innerHTML = '<option value="">No hay clientes registrados aún</option>';
+            }
+
+            const prodSel = document.getElementById('qProduct');
+            prodSel.innerHTML = '<option value="">-- Selecciona un Servicio/Producto --</option>';
+            const inventory = JSON.parse(localStorage.getItem('altus_inventory') || '[]');
+            if (inventory && inventory.length > 0) {
+                inventory.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.name + ' - $' + Number(p.price || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+                    opt.dataset.price = p.price || 0;
+                    opt.dataset.desc = p.desc || '';
+                    prodSel.appendChild(opt);
+                });
+            } else {
+                prodSel.innerHTML = '<option value="">No hay servicios en el catálogo aún</option>';
+            }
+
+            document.getElementById('qTotal').value = '';
+            document.getElementById('qNotes').value = '';
+            showModal('addQuoteModal');
+        }
+
+        function updateQuoteTotal() {
+            const prodSel = document.getElementById('qProduct');
+            const selectedOpt = prodSel.options[prodSel.selectedIndex];
+            if (selectedOpt && selectedOpt.dataset && selectedOpt.dataset.price) {
+                document.getElementById('qTotal').value = selectedOpt.dataset.price;
+            }
+        }
+
         async function loadQuotes() {
             const container = document.getElementById('quotesList');
             const quotes = await apiRequest('/quotes');
+            savedQuotesCache = quotes || [];
             if (!quotes || quotes.length === 0) {
-                container.innerHTML = emptyState('Sin cotizaciones', 'Crea una nueva propuesta.');
+                container.innerHTML = emptyState('Sin cotizaciones', 'Crea una nueva propuesta para tus clientes.');
                 return;
             }
-            container.innerHTML = quotes.map(q => \`
-            <div class="card">
-                <div class="flex justify-between items-center mb-6">
-                    <span class="status-badge">\${q.status}</span>
-                    <h3 class="font-light text-2xl text-neutral-900">$\${q.total.toLocaleString('es-MX', {minimumFractionDigits: 2})}</h3>
-                </div>
-                <button onclick="approveQuote('\${q.id}', \${q.total})" class="w-full bg-neutral-100 text-neutral-900 py-3 rounded-lg text-sm font-medium hover:bg-neutral-200 transition">Cerrar Venta (Ganada)</button>
-            </div>\`).join('');
+            container.innerHTML = quotes.map(q => {
+                const clientName = q.client ? q.client.name : 'Cliente General';
+                const itemName = (q.items && q.items[0]) ? q.items[0].name : 'Servicio / Proyecto';
+                const dateStr = q.created_at ? new Date(q.created_at).toLocaleDateString('es-MX') : '';
+
+                return \`
+                <div class="card relative flex flex-col gap-3">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="status-badge mb-2">\${q.status}</span>
+                            <h3 class="font-medium text-lg text-neutral-900">\${clientName}</h3>
+                            <p class="text-xs text-neutral-500 font-medium mt-0.5">\${itemName}</p>
+                            <p class="text-[0.65rem] text-neutral-400 mt-1 uppercase tracking-wider">\${dateStr}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-2xl font-light text-brand-navy">$\${Number(q.total).toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 mt-2 pt-3 border-t border-neutral-100">
+                        <button onclick="reExportQuote('\${q.id}', 'pdf')" class="text-xs py-2 px-3 rounded-lg bg-neutral-100 text-neutral-700 hover:bg-neutral-200 font-medium flex items-center justify-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            PDF
+                        </button>
+                        <button onclick="reExportQuote('\${q.id}', 'image')" class="text-xs py-2 px-3 rounded-lg bg-neutral-100 text-neutral-700 hover:bg-neutral-200 font-medium flex items-center justify-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            Imagen
+                        </button>
+                        <button onclick="approveQuote('\${q.id}', \${q.total})" class="text-xs py-2 px-3 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 font-medium flex items-center justify-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Cobrar
+                        </button>
+                    </div>
+                </div>\`;
+            }).join('');
         }
 
-        async function saveQuote() {
-            const total = parseFloat(document.getElementById('qTotal').value);
-            if (!total) return alert("Monto inválido");
-            const newQuote = { id: crypto.randomUUID(), total, status: 'Pendiente', isSynced: true };
+        let savedQuotesCache = [];
+        async function fetchQuotesCache() {
+            savedQuotesCache = await apiRequest('/quotes') || [];
+            return savedQuotesCache;
+        }
+
+        async function reExportQuote(quoteId, format) {
+            if (!savedQuotesCache || savedQuotesCache.length === 0) {
+                await fetchQuotesCache();
+            }
+            const q = savedQuotesCache.find(x => x.id === quoteId);
+            if (!q) return alert('Cotización no encontrada.');
+            
+            const client = q.client || { name: 'Cliente', email: '', phone: '' };
+            const product = (q.items && q.items[0]) ? q.items[0] : { name: 'Servicio / Proyecto', desc: '' };
+            generateAndDownloadDocument(q, client, product, format);
+        }
+
+        async function saveAndGenerateQuote(format) {
+            const clientId = document.getElementById('qClient').value;
+            const productId = document.getElementById('qProduct').value;
+            const totalVal = parseFloat(document.getElementById('qTotal').value);
+            const notes = document.getElementById('qNotes').value.trim();
+
+            if (!clientId) return alert('Por favor selecciona un cliente.');
+            if (!productId) return alert('Por favor selecciona un servicio o producto.');
+            if (!totalVal || isNaN(totalVal) || totalVal <= 0) return alert('Ingresa un monto válido.');
+
+            const client = globalClients.find(c => c.id === clientId) || { name: 'Cliente' };
+            const inventory = JSON.parse(localStorage.getItem('altus_inventory') || '[]');
+            const product = inventory.find(p => p.id === productId) || { name: 'Servicio', price: totalVal };
+
+            const subtotal = Number((totalVal / 1.16).toFixed(2));
+            const taxes = Number((totalVal - subtotal).toFixed(2));
+
+            const newQuote = {
+                id: crypto.randomUUID(),
+                client_id: clientId,
+                subtotal: subtotal,
+                taxes: taxes,
+                total: totalVal,
+                status: 'Pendiente',
+                items: [{ id: product.id, name: product.name, desc: product.desc || '', price: totalVal }],
+                notes: notes,
+                created_at: new Date()
+            };
+
             await apiRequest('/quotes', 'POST', newQuote);
             hideModal('addQuoteModal');
             loadQuotes();
+
+            generateAndDownloadDocument(newQuote, client, product, format);
+        }
+
+        function generateAndDownloadDocument(quote, client, product, format) {
+            const folio = (quote.id || '00000000').substring(0, 8).toUpperCase();
+            const dateStr = new Date(quote.created_at || Date.now()).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+            const totalStr = Number(quote.total).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+            const subtotalStr = Number(quote.subtotal || (quote.total / 1.16)).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+            const taxesStr = Number(quote.taxes || (quote.total - (quote.total / 1.16))).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+
+            const docElement = document.createElement('div');
+            docElement.style.padding = '40px';
+            docElement.style.fontFamily = "'Inter', Arial, sans-serif";
+            docElement.style.backgroundColor = '#ffffff';
+            docElement.style.color = '#152336';
+            docElement.style.maxWidth = '750px';
+            docElement.style.margin = '0 auto';
+            docElement.style.boxSizing = 'border-box';
+
+            docElement.innerHTML = \`
+                <div style="border-bottom: 2px solid #d9664c; padding-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h1 style="font-size: 26px; font-weight: 700; color: #152336; margin: 0; letter-spacing: -0.5px;">ALTUS MKT DIGITAL</h1>
+                        <p style="font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 2px; margin: 4px 0 0 0;">Propuesta de Servicios</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="display: inline-block; background: #152336; color: #ffffff; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">Folio: #\${folio}</span>
+                        <p style="font-size: 11px; color: #777; margin: 6px 0 0 0;">Fecha: \${dateStr}</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; display: flex; justify-content: space-between;">
+                    <div style="background: #f8fafc; padding: 16px 20px; border-radius: 10px; flex: 1; margin-right: 15px; border: 1px solid #e2e8f0;">
+                        <p style="font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 700; letter-spacing: 1px; margin: 0 0 6px 0;">Preparado Para:</p>
+                        <h2 style="font-size: 18px; font-weight: 600; color: #0f172a; margin: 0;">\${client.name || 'Cliente'}</h2>
+                        \${client.contact_name ? \`<p style="font-size: 12px; color: #475569; margin: 4px 0 0 0;">Atención: \${client.contact_name}</p>\` : ''}
+                        \${client.email ? \`<p style="font-size: 11px; color: #64748b; margin: 2px 0 0 0;">\${client.email}</p>\` : ''}
+                        \${client.phone ? \`<p style="font-size: 11px; color: #64748b; margin: 2px 0 0 0;">Tel: \${client.phone}</p>\` : ''}
+                    </div>
+                    <div style="background: #f8fafc; padding: 16px 20px; border-radius: 10px; width: 220px; border: 1px solid #e2e8f0; text-align: right;">
+                        <p style="font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 700; letter-spacing: 1px; margin: 0 0 6px 0;">Vigencia:</p>
+                        <p style="font-size: 13px; font-weight: 600; color: #0f172a; margin: 0;">15 Días Naturales</p>
+                        <p style="font-size: 11px; color: #64748b; margin: 4px 0 0 0;">Moneda: MXN</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 35px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #e2e8f0; background: #f1f5f9;">
+                                <th style="text-align: left; padding: 10px 14px; font-size: 11px; text-transform: uppercase; color: #475569; font-weight: 700;">Concepto / Servicio</th>
+                                <th style="text-align: right; padding: 10px 14px; font-size: 11px; text-transform: uppercase; color: #475569; font-weight: 700;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 16px 14px;">
+                                    <p style="font-size: 15px; font-weight: 600; color: #0f172a; margin: 0;">\${product.name || 'Servicio'}</p>
+                                    \${product.desc ? \`<p style="font-size: 12px; color: #64748b; margin: 4px 0 0 0; line-height: 1.4;">\${product.desc}</p>\` : ''}
+                                </td>
+                                <td style="text-align: right; padding: 16px 14px; font-size: 15px; font-weight: 600; color: #0f172a;">
+                                    $\${totalStr}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 25px; display: flex; justify-content: flex-end;">
+                    <div style="width: 260px;">
+                        <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; color: #64748b;">
+                            <span>Subtotal:</span>
+                            <span>$\${subtotalStr}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; color: #64748b;">
+                            <span>IVA (16%):</span>
+                            <span>$\${taxesStr}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; font-size: 18px; font-weight: 700; color: #152336; border-top: 2px solid #0f172a; margin-top: 6px;">
+                            <span>Total MXN:</span>
+                            <span>$\${totalStr}</span>
+                        </div>
+                    </div>
+                </div>
+
+                \${quote.notes ? \`
+                <div style="margin-top: 30px; background: #fff7ed; border-left: 4px solid #ea580c; padding: 14px 18px; border-radius: 4px;">
+                    <p style="font-size: 11px; text-transform: uppercase; color: #c2410c; font-weight: 700; margin: 0 0 4px 0;">Notas y Condiciones:</p>
+                    <p style="font-size: 12px; color: #7c2d12; margin: 0; line-height: 1.4; white-space: pre-wrap;">\${quote.notes}</p>
+                </div>\` : ''}
+
+                <div style="margin-top: 45px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center;">
+                    <p style="font-size: 12px; font-weight: 600; color: #0f172a; margin: 0;">Altus MKT Digital</p>
+                    <p style="font-size: 11px; color: #94a3b8; margin: 4px 0 0 0;">Gracias por tu preferencia y confianza.</p>
+                </div>
+            \`;
+
+            const filename = 'Cotizacion_Altus_' + (client.name || 'Cliente').replace(/\\s+/g, '_') + '_' + folio;
+
+            if (format === 'image') {
+                if (window.html2canvas) {
+                    document.body.appendChild(docElement);
+                    window.html2canvas(docElement, { scale: 2 }).then(canvas => {
+                        document.body.removeChild(docElement);
+                        const link = document.createElement('a');
+                        link.download = filename + '.png';
+                        link.href = canvas.toDataURL('image/png');
+                        link.click();
+                    }).catch(err => {
+                        if (docElement.parentNode) document.body.removeChild(docElement);
+                        alert('Error al generar imagen: ' + err);
+                    });
+                } else {
+                    alert('Librería de imagen cargando, intenta en unos segundos.');
+                }
+            } else {
+                if (window.html2pdf) {
+                    const opt = {
+                        margin: 10,
+                        filename: filename + '.pdf',
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2 },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    };
+                    window.html2pdf().set(opt).from(docElement).save();
+                } else {
+                    alert('Librería PDF cargando, intenta en unos segundos.');
+                }
+            }
         }
 
         // --- VENTAS ---
